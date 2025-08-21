@@ -1,4 +1,4 @@
-struct usuario
+struct usuario 
 {
     int id;
     char nombre[100];

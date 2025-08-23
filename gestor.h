@@ -1,32 +1,46 @@
-#include <cstring>
-#include <string>
+#ifndef GESTOR_H
+#define GESTOR_H
 
+#include <string>
+#include <vector>
 // estructuras de datos
-struct usuario 
+struct Usuario
 {
     int id;
-    char nombre[50];
-    char username[50];
-    char password[50];
-    char perfil[50];
+    std::string nombre;
+    std::string username;
+    std::string password;
+    std::string perfil;
 };
 
-// metodos
+struct ListaUsuarios{
+    std::vector<Usuario> usuarios;
+    bool enMemoria;
+};
 
-usuario crearUsuario(int id, const char* nombre, const char* perfil, const char* username, const char* password) {
-    usuario nuevoUsuario;
-    
-    nuevoUsuario.id = id;
-    strncpy(nuevoUsuario.nombre, nombre, sizeof(nuevoUsuario.nombre) - 1);
-    nuevoUsuario.nombre[sizeof(nuevoUsuario.nombre) - 1] = '\0';
-    strncpy(nuevoUsuario.perfil, perfil, sizeof(nuevoUsuario.perfil) - 1);
-    nuevoUsuario.perfil[sizeof(nuevoUsuario.perfil) - 1];
-    strncpy(nuevoUsuario.username, username, sizeof(nuevoUsuario.username) - 1);
-    nuevoUsuario.username[sizeof(nuevoUsuario.username) - 1] = '\0';
-    strncpy(nuevoUsuario.password, password, sizeof(nuevoUsuario.password) - 1);
-    nuevoUsuario.password[sizeof(nuevoUsuario.password) - 1] = '\0';
+//
+struct OpcionMenu {
+    int id;
+    std::string descripcion;
+    void (*funcion)();  // puntero a la funcion de menu que ejecuta
+    bool activa;
+};
 
-    return nuevoUsuario;
-}
+// variables globales
+extern ListaUsuarios listaUsuarios;
+extern std::string rutaArchivo;
+extern std::vector<OpcionMenu> opcionesMenu;
 
-// la funcion de menu funciona como arreglo, para que seafaicl manejar los permisos
+void cargarVariablesEntorno();
+void iniciarMenu();
+void mostrarMenu();
+void procesarOpcion(int opcion);
+void ejecutarSistema();
+void limpiarPantalla();
+
+void buscarUsuario();
+void crearUsuario();
+void eliminarUsuario();
+void listarUsuarios();
+void salir();
+#endif

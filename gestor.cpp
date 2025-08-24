@@ -133,7 +133,33 @@ void crearUsuario(){
 
 void listarUsuarios(){
     limpiarPantalla();
-    std::cout << "por implementar" << std::endl;
+
+    std::string linea;
+    std::ifstream archivo ("data/usuarios_ejemplo.txt");
+
+    std::cout << "Id\tNombre\t\tPerfil" << std::endl;
+    
+    if(!archivo.is_open()){
+        std::cerr << "Error al abrir el archivo." << std::endl;
+    }
+    while(std::getline(archivo, linea))
+    {
+        std::stringstream ss(linea);
+        std::string campo;
+        std::vector<std::string> campos;
+        
+        while(std::getline(ss, campo, ',')){
+            campos.push_back(campo);
+        } 
+
+        if (campos.size() >=3){
+            std::cout << campos[0] << "\t" 
+                      << campos[2] << "\t\t" // 2 es nombre de usuario, nombre es 1 
+                      << campos.back() 
+                      << std::endl;
+        }
+    }
+    archivo.close();
 }
 
 void salir(){

@@ -43,4 +43,5 @@ void crearUsuario();
 void eliminarUsuario();
 void listarUsuarios();
 void salir();
+int obtenerUltimoId();
 #endif

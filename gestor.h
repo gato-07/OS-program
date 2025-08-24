@@ -30,6 +30,7 @@ struct OpcionMenu {
 extern ListaUsuarios listaUsuarios;
 extern std::string rutaArchivo;
 extern std::vector<OpcionMenu> opcionesMenu;
+extern bool sistemaActivo;
 
 void cargarVariablesEntorno();
 void iniciarMenu();
@@ -38,10 +39,15 @@ void procesarOpcion(int opcion);
 void ejecutarSistema();
 void limpiarPantalla();
 
-void buscarUsuario();
+int buscarUsuario(int id);
 void crearUsuario();
 void eliminarUsuario();
 void listarUsuarios();
 void salir();
-int obtenerUltimoId();
+
+void cargarUsuariosMemoria();
+void guardarUsuariosArchivo();
+void agregarUsuarioMemoria(const Usuario& usuario);
+int obtenerProximoId();
+bool existeUsername(const std::string& username);
 #endif

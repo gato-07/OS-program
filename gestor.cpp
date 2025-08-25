@@ -103,12 +103,10 @@ void guardarUsuariosArchivo() {
 }
 
 void agregarUsuarioMemoria(const Usuario &usuario) {
-    cargarUsuariosMemoria(); // revisar si ya existen
     listaUsuarios.usuarios.push_back(usuario);
 }
 
 bool existeUsername(const std::string& username) {
-    cargarUsuariosMemoria();
     for (const auto& usuario : listaUsuarios.usuarios) {
         if (usuario.username == username) {
             return true;
@@ -158,8 +156,6 @@ void limpiarPantalla() {
 // estas son las funciones a las que deben apuntar cada elemento del tipo
 
 int buscarUsuario(int id){
-    cargarUsuariosMemoria();
-
     for (size_t i = 0; i < listaUsuarios.usuarios.size(); i++) {
         if (listaUsuarios.usuarios[i].id == id) {
             return i; // Retorna el índice donde está el usuario
@@ -241,15 +237,20 @@ void eliminarUsuario(){
     guardarUsuariosArchivo();
 
     std::cout << "\nUsuario '" << usuarioAEliminar.nombre << "' eliminado exitosamente." << std::endl;
+
+    std::cout << "\nPresione Enter para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 void crearUsuario(){
     limpiarPantalla();
+    cargarUsuariosMemoria();
 
     std::string nombre, username, password, perfil;
     int opcionPerfil;
     bool entradaValida = false;
-    //Duda sobre la siguiente linea del codigo, preguntar despues si hay alguna otra manera de hacerlo
+    // Duda sobre la siguiente linea del codigo, preguntar despues si hay alguna otra manera de hacerlo
     // no, no se puede xd
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -263,12 +264,16 @@ void crearUsuario(){
     // validar campos vacíos
     if (nombre.empty() || username.empty() || password.empty()) {
         std::cout << "Error: Todos los campos son obligatorios." << std::endl;
+        std::cout << "\nPresione Enter para continuar...";
+        std::cin.get();
         return;
     }
 
     // validar username duplicado
     if (existeUsername(username)) {
         std::cout << "Error: El username '" << username << "' ya existe." << std::endl;
+        std::cout << "\nPresione Enter para continuar...";
+        std::cin.get();
         return;
     }
     while (!entradaValida) {
@@ -292,7 +297,6 @@ void crearUsuario(){
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-
     Usuario nuevoUsuario;
     nuevoUsuario.id = obtenerProximoId();
     nuevoUsuario.nombre = nombre;
@@ -303,13 +307,14 @@ void crearUsuario(){
     agregarUsuarioMemoria(nuevoUsuario);
     guardarUsuariosArchivo();
     std::cout << "usuario '" << username << "' (ID: " << nuevoUsuario.id << ") creado exitosamente" << std::endl;
+    std::cout << "\nPresione Enter para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 void listarUsuarios(){
     limpiarPantalla();
     cargarUsuariosMemoria();
-
-    std::string linea;
 
     std::cout << "Id\tNombre\t\tUsername\tPerfil" << std::endl;
 
@@ -323,6 +328,9 @@ void listarUsuarios(){
                   << usuario.username << "\t\t"
                   << usuario.perfil << std::endl;
     }
+    std::cout << "\nPresione Enter para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 void salir(){
@@ -331,8 +339,6 @@ void salir(){
 }
 
 int obtenerProximoId() {
-    cargarUsuariosMemoria(); // tienen que haber si o si datos en memoria
-
     int maxId = 0;
     for (const auto& usuario : listaUsuarios.usuarios) {
         if (usuario.id > maxId) {
@@ -349,13 +355,12 @@ void ejecutarSistema() {
     while (sistemaActivo) {
         mostrarMenu();
         int opcion;
-        std::cin >> opcion;
-        procesarOpcion(opcion);
 
-        if (sistemaActivo) {
-            std::cout << "\nPresione Enter para continuar...";
-            std::cin.ignore();
-            std::cin.get();
+        if (!(std::cin >> opcion)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        } else {
+            procesarOpcion(opcion);
         }
     }
     std::cout << "Cerrado" << std::endl;

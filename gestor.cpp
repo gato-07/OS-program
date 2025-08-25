@@ -250,7 +250,7 @@ void crearUsuario(){
     std::string nombre, username, password, perfil;
     int opcionPerfil;
     bool entradaValida = false;
-    // Duda sobre la siguiente linea del codigo, preguntar despues si hay alguna otra manera de hacerlo
+    //Duda sobre la siguiente linea del codigo, preguntar despues si hay alguna otra manera de hacerlo
     // no, no se puede xd
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 

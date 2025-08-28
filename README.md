@@ -20,3 +20,6 @@
 - Ejecutar:
 - en bash: "./main"
 
+### Notas:
+
+- Si no se encuentra un archivo usuarios.txt el programa crea uno vacío automáticamente. Del mismo modo se puede importar uno existente siguiendo el formato del programa

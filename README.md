@@ -1,11 +1,11 @@
 # Sistema Operativo
 
-## Checklist de progeso
+## Checklist de progreso
 ### :arrows_counterclockwise: : En progreso, :x: : No terminado, :white_check_mark: : Terminado.
 - :white_check_mark: Menu.
   - ta bien la estructura de archivos y el menu funciona.
 - ✅: Funciones faltantes
-  - Implementadas funciones de Salie y Listar Usuarios.
+  - Implementadas funciones de Salir y Listar Usuarios.
 
 # Acerca del programa
 

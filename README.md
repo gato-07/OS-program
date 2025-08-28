@@ -15,4 +15,4 @@
 
 ### Instrucciones:
 
-- Compilar Gestor.cpp y Main.cpp en C++
+- Compilar gestor.cpp y main.cpp en C++

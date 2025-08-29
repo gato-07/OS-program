@@ -1,9 +1,10 @@
 # Compilador y flags
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -I$(SRCDIR)
+CXXFLAGS = -std=c++11 -Wall -I$(INCDIR)
 
 # Directorios
 SRCDIR = src
+INCDIR = include
 OBJDIR = obj
 BINDIR = bin
 
@@ -30,12 +31,12 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Dependencias específicas (para los headers)
-$(OBJDIR)/main.o: $(SRCDIR)/main.cpp $(SRCDIR)/sistema.h
-$(OBJDIR)/sistema.o: $(SRCDIR)/sistema.cpp $(SRCDIR)/sistema.h $(SRCDIR)/archivo.h $(SRCDIR)/menu.h
-$(OBJDIR)/menu.o: $(SRCDIR)/menu.cpp $(SRCDIR)/menu.h $(SRCDIR)/usuario.h $(SRCDIR)/utils.h
-$(OBJDIR)/usuario.o: $(SRCDIR)/usuario.cpp $(SRCDIR)/usuario.h $(SRCDIR)/archivo.h $(SRCDIR)/utils.h
-$(OBJDIR)/archivo.o: $(SRCDIR)/archivo.cpp $(SRCDIR)/archivo.h $(SRCDIR)/usuario.h
-$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(SRCDIR)/utils.h
+$(OBJDIR)/main.o: $(SRCDIR)/main.cpp $(INCDIR)/sistema.h
+$(OBJDIR)/sistema.o: $(SRCDIR)/sistema.cpp $(INCDIR)/sistema.h $(INCDIR)/archivo.h $(INCDIR)/menu.h
+$(OBJDIR)/menu.o: $(SRCDIR)/menu.cpp $(INCDIR)/menu.h $(INCDIR)/usuario.h $(INCDIR)/utils.h
+$(OBJDIR)/usuario.o: $(SRCDIR)/usuario.cpp $(INCDIR)/usuario.h $(INCDIR)/archivo.h $(INCDIR)/utils.h
+$(OBJDIR)/archivo.o: $(SRCDIR)/archivo.cpp $(INCDIR)/archivo.h $(INCDIR)/usuario.h
+$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(INCDIR)/utils.h
 
 # Limpiar archivos compilados
 clean:

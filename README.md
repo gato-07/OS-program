@@ -16,9 +16,9 @@
 ### Instrucciones:
 
 - Compilar gestor.cpp y main.cpp en C++
-- en bash: "g++ main.cpp gestor.cpp -o main" (main o el nombre que prefiera)
+- en bash: "make all"
 - Ejecutar:
-- en bash: "./main"
+- en bash: "./bin/gestor"
 
 ### Notas:
 

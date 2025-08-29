@@ -16,7 +16,7 @@
 ### Instrucciones:
 
 - Compilar gestor.cpp y main.cpp en C++
-- en bash: "make all"
+- en bash: "make rebuild"
 - Ejecutar:
 - en bash: "./bin/gestor"
 

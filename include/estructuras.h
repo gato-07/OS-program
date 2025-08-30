@@ -12,6 +12,14 @@ struct Usuario {
     std::string perfil;
 };
 
+struct UsuarioTemporal {
+    int id;
+    char nombre[25];
+    char username[17];
+    char password[12];
+    char perfil[8];
+};
+
 struct ListaUsuarios {
     std::vector<Usuario> usuarios;
     bool enMemoria;

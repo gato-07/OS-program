@@ -21,5 +21,4 @@
 - en bash: "./bin/gestor"
 
 ### Notas:
-
-- Si no se encuentra un archivo usuarios.txt el programa crea uno vacío automáticamente. Del mismo modo se puede importar uno existente siguiendo el formato del programa
+- Si no se encuentra un archivo usuarios.dat el programa crea uno vacío automáticamente. Del mismo modo se puede importar uno existente siguiendo el formato del programa

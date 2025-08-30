@@ -1,15 +1,16 @@
 #include "archivo.h"
+#include "estructuras.h"
 #include "usuario.h"  // Para acceder a listaUsuarios
 #include <iostream>
+#include <cstring>
 #include <fstream>
-#include <sstream>
 
 std::string rutaArchivo = "";
 
 void cargarVariablesEntorno() {
     std::ifstream archivo(".env");
     std::string linea;
-    rutaArchivo = "data/usuarios.txt";
+    rutaArchivo = "data/usuarios.dat";  // Cambiado a .dat
 
     if (!archivo.is_open()) {
         std::cout << "Archivo .env no encontrado. Usando: " << rutaArchivo << std::endl;
@@ -37,59 +38,60 @@ void cargarUsuariosMemoria() {
         return;
     }
 
-    std::ifstream archivo(rutaArchivo);
-    std::string linea;
+    std::ifstream archivo(rutaArchivo, std::ios::binary);
 
     if (!archivo.is_open()) {
-        std::cout << "No se encuentra el archivo de usuarios, se creó uno nuevo en " << rutaArchivo << std::endl;
+        std::cout << "No se encuentra el archivo de usuarios, se creará uno nuevo en " << rutaArchivo << std::endl;
         listaUsuarios.enMemoria = true;
         return;
     }
 
     listaUsuarios.usuarios.clear();
+    UsuarioTemporal temp;
 
-    while (std::getline(archivo, linea)) {
-        if (!linea.empty()) {
-            std::stringstream ss(linea);
-            std::string campo;
-            std::vector<std::string> campos;
+    while (archivo.read(reinterpret_cast<char*>(&temp), sizeof(UsuarioTemporal))) {
+        Usuario usuario;
+        usuario.id = temp.id;
+        usuario.nombre = std::string(temp.nombre);
+        usuario.username = std::string(temp.username);
+        usuario.password = std::string(temp.password);
+        usuario.perfil = std::string(temp.perfil);
 
-            while (std::getline(ss, campo, ',')) {
-                campos.push_back(campo);
-            }
-
-            if (campos.size() >= 5) {
-                Usuario usuario;
-                usuario.id = std::stoi(campos[0]);
-                usuario.nombre = campos[1];
-                usuario.username = campos[2];
-                usuario.password = campos[3];
-                usuario.perfil = campos[4];
-
-                listaUsuarios.usuarios.push_back(usuario);
-            }
-        }
+        listaUsuarios.usuarios.push_back(usuario);
     }
+
     archivo.close();
     listaUsuarios.enMemoria = true;
+    std::cout << "Se cargaron " << listaUsuarios.usuarios.size() << " usuarios desde el archivo .dat" << std::endl;
 }
 
 void guardarUsuariosArchivo() {
-    std::ofstream archivo(rutaArchivo);
-
+    std::ofstream archivo(rutaArchivo, std::ios::binary);
     if (!archivo.is_open()) {
         std::cerr << "No se pudo abrir el archivo: " << rutaArchivo << std::endl;
         return;
     }
 
     for (const auto& usuario : listaUsuarios.usuarios) {
-        archivo << usuario.id << ","
-                << usuario.nombre << ","
-                << usuario.username << ","
-                << usuario.password << ","
-                << usuario.perfil << std::endl;
+        UsuarioTemporal temp;
+        temp.id = usuario.id;
+
+        std::strncpy(temp.nombre, usuario.nombre.c_str(), sizeof(temp.nombre) - 1);
+        temp.nombre[sizeof(temp.nombre) - 1] = '\0';
+
+        std::strncpy(temp.username, usuario.username.c_str(), sizeof(temp.username) - 1);
+        temp.username[sizeof(temp.username) - 1] = '\0';
+
+        std::strncpy(temp.password, usuario.password.c_str(), sizeof(temp.password) - 1);
+        temp.password[sizeof(temp.password) - 1] = '\0';
+
+        std::strncpy(temp.perfil, usuario.perfil.c_str(), sizeof(temp.perfil) - 1);
+        temp.perfil[sizeof(temp.perfil) - 1] = '\0';
+
+        // reinterpreta la estructura temporal
+        archivo.write(reinterpret_cast<const char*>(&temp), sizeof(UsuarioTemporal));
     }
 
     archivo.close();
-    std::cout << "Usuarios guardados en archivo: " << rutaArchivo << std::endl;
+    std::cout << "Usuarios guardados en archivo binario: " << rutaArchivo << std::endl;
 }

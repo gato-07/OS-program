@@ -35,16 +35,19 @@ void crearUsuario() {
     // Validar campos vacíos
     if (nombre.empty() || username.empty() || password.empty()) {
         std::cout << "Error: Todos los campos son obligatorios." << std::endl;
-        std::cout << "\nPresione Enter para continuar...";
-        std::cin.get();
+        pausarPantalla();
+        return;
+    }
+    // validar longitud de los campos
+    if (!validarLongitudesUsuario(nombre, username, password)) {
+        pausarPantalla();
         return;
     }
 
     // Validar username duplicado
     if (existeUsername(username)) {
         std::cout << "Error: El username '" << username << "' ya existe." << std::endl;
-        std::cout << "\nPresione Enter para continuar...";
-        std::cin.get();
+        pausarPantalla();
         return;
     }
 
@@ -78,9 +81,7 @@ void crearUsuario() {
     guardarUsuariosArchivo();
 
     std::cout << "Usuario '" << username << "' (ID: " << nuevoUsuario.id << ") creado exitosamente" << std::endl;
-    std::cout << "\nPresione Enter para continuar...";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
+    pausarPantalla();
 }
 
 void eliminarUsuario() {
@@ -89,6 +90,7 @@ void eliminarUsuario() {
 
     if (listaUsuarios.usuarios.empty()) {
         std::cout << "No hay usuarios para eliminar." << std::endl;
+        pausarPantalla();
         return;
     }
 
@@ -110,6 +112,7 @@ void eliminarUsuario() {
         std::cout << "ID inválido." << std::endl;
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        pausarPantalla();
         return;
     }
 
@@ -117,6 +120,7 @@ void eliminarUsuario() {
 
     if (indice == -1) {
         std::cout << "Usuario con ID " << idEliminar << " no encontrado." << std::endl;
+        pausarPantalla();
         return;
     }
 
@@ -134,6 +138,7 @@ void eliminarUsuario() {
 
         if (confirmacion != 's' && confirmacion != 'S') {
             std::cout << "Operación cancelada." << std::endl;
+            pausarPantalla();
             return;
         }
     }
@@ -157,9 +162,7 @@ void eliminarUsuario() {
 
     std::cout << "\nUsuario '" << usuarioAEliminar.nombre << "' eliminado exitosamente." << std::endl;
 
-    std::cout << "\nPresione Enter para continuar...";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
+    pausarPantalla();
 }
 
 void listarUsuarios() {
@@ -179,9 +182,7 @@ void listarUsuarios() {
                   << usuario.perfil << std::endl;
     }
 
-    std::cout << "\nPresione Enter para continuar...";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
+    pausarPantalla();
 }
 
 void agregarUsuarioMemoria(const Usuario& usuario) {

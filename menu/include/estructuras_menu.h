@@ -1,7 +1,7 @@
 #ifndef ESTRUCTURAS_MENU_H
 #define ESTRUCTURAS_MENU_H
 
-#include "../../common/include/estructuras_comunes.h"
+#include "../../common/include/estructuras_usuarios.h"
 #include <set>
 
 // estructuras para el menu

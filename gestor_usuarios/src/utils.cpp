@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "estructuras.h"
+#include "estructuras_gestor.h"
 #include <cstdlib>
 #include <iostream>
 #include <limits>

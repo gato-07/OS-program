@@ -2,7 +2,7 @@
 #define ARCHIVO_H
 
 #include <string>
-#include "estructuras.h"
+#include "estructuras_gestor.h"
 
 extern std::string rutaArchivo;
 

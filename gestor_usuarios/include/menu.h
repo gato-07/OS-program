@@ -1,7 +1,7 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include "estructuras.h"
+#include "estructuras_gestor.h"
 #include <vector>
 
 extern std::vector<OpcionMenu> opcionesMenu;

@@ -1,5 +1,5 @@
 #include "archivo.h"
-#include "estructuras.h"
+#include "estructuras_gestor.h"
 #include "usuario.h"
 #include <iostream>
 #include <cstring>

@@ -1,8 +1,7 @@
-#ifndef ESTRUCTURAS_H
-#define ESTRUCTURAS_H
-
+#ifndef ESTRUCTURAS_USUARIOS_H
+#define ESTRUCTURAS_USUARIOS_H
 #include <string>
-#include <vector>
+
 
 struct Usuario {
     int id;
@@ -18,18 +17,6 @@ struct UsuarioTemporal {
     char username[17];
     char password[12];
     char perfil[8];
-};
-
-struct ListaUsuarios {
-    std::vector<Usuario> usuarios;
-    bool enMemoria;
-};
-
-struct OpcionMenu {
-    int id;
-    std::string descripcion;
-    void (*funcion)();
-    bool activa;
 };
 
 #endif

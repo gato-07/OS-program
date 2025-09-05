@@ -1,6 +1,6 @@
 # Compilador y flags
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -I$(INCDIR)
+CXXFLAGS = -std=c++11 -Wall -I$(INCDIR) -I$../common/include
 
 # Directorios
 SRCDIR = src
@@ -37,7 +37,7 @@ $(OBJDIR)/main.o: $(SRCDIR)/main.cpp $(INCDIR)/menu.h $(INCDIR)/archivo.h $(INCD
 $(OBJDIR)/menu.o: $(SRCDIR)/menu.cpp $(INCDIR)/menu.h $(INCDIR)/usuario.h $(INCDIR)/utils.h
 $(OBJDIR)/usuario.o: $(SRCDIR)/usuario.cpp $(INCDIR)/usuario.h $(INCDIR)/archivo.h $(INCDIR)/utils.h
 $(OBJDIR)/archivo.o: $(SRCDIR)/archivo.cpp $(INCDIR)/archivo.h $(INCDIR)/usuario.h
-$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(INCDIR)/utils.h $(INCDIR)/estructuras.h
+$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(INCDIR)/utils.h $(INCDIR)/estructuras_gestor.h
 
 # Limpiar archivos compilados
 clean:

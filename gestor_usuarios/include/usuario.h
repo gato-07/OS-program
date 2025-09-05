@@ -1,7 +1,7 @@
 #ifndef USUARIO_H
 #define USUARIO_H
 
-#include "estructuras.h"
+#include "estructuras_gestor.h"
 
 extern ListaUsuarios listaUsuarios;
 

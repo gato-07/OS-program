@@ -1,6 +1,6 @@
 #include "archivo.h"
 #include "estructuras.h"
-#include "usuario.h"  // Para acceder a listaUsuarios
+#include "usuario.h"
 #include <iostream>
 #include <cstring>
 #include <fstream>
@@ -8,12 +8,12 @@
 std::string rutaArchivo = "";
 
 void cargarVariablesEntorno() {
-    std::ifstream archivo(".env");
+    std::ifstream archivo("../.env");  // Buscar .env en el directorio padre
     std::string linea;
-    rutaArchivo = "data/usuarios.dat";  // Cambiado a .dat
+    rutaArchivo = "../data/usuarios.dat";  // Ruta por defecto al directorio data compartido
 
     if (!archivo.is_open()) {
-        std::cout << "Archivo .env no encontrado. Usando: " << rutaArchivo << std::endl;
+        std::cout << "Archivo .env no encontrado. Usando ruta por defecto: " << rutaArchivo << std::endl;
         return;
     }
 
@@ -21,9 +21,16 @@ void cargarVariablesEntorno() {
         if (linea.find("USER_FILE") != std::string::npos) {
             size_t pos = linea.find('=');
             if (pos != std::string::npos) {
-                rutaArchivo = linea.substr(pos + 1);
-                if (!rutaArchivo.empty() && rutaArchivo.front() == '"' && rutaArchivo.back() == '"') {
-                    rutaArchivo = rutaArchivo.substr(1, rutaArchivo.length() - 2);
+                std::string valor = linea.substr(pos + 1);
+                // Quitar comillas si las tiene
+                if (!valor.empty() && valor.front() == '"' && valor.back() == '"') {
+                    valor = valor.substr(1, valor.length() - 2);
+                }
+                // Agregar ../ al inicio si no lo tiene
+                if (valor.substr(0, 3) != "../") {
+                    rutaArchivo = "../" + valor;
+                } else {
+                    rutaArchivo = valor;
                 }
                 break;
             }
@@ -62,7 +69,7 @@ void cargarUsuariosMemoria() {
 
     archivo.close();
     listaUsuarios.enMemoria = true;
-    std::cout << "Se cargaron " << listaUsuarios.usuarios.size() << " usuarios desde el archivo .dat" << std::endl;
+    std::cout << "Se cargaron " << listaUsuarios.usuarios.size() << " usuarios desde el archivo usuarios" << std::endl;
 }
 
 void guardarUsuariosArchivo() {
@@ -93,5 +100,5 @@ void guardarUsuariosArchivo() {
     }
 
     archivo.close();
-    std::cout << "Usuarios guardados en archivo binario: " << rutaArchivo << std::endl;
+    std::cout << "Usuarios guardados en archivo: " << rutaArchivo << std::endl;
 }

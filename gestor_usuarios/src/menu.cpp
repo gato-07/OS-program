@@ -36,8 +36,7 @@ void procesarOpcion(int opcion) {
 }
 
 void salir() {
-    std::cout << "Saliendo del sistema..." << std::endl;
+    std::cout << "Preparando para salir..." << std::endl;
     sistemaActivo = false;
-    listaUsuarios.enMemoria = false;
     opcionesMenu.clear();
 }

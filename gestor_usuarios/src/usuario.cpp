@@ -17,7 +17,6 @@ int buscarUsuario(int id) {
 
 void crearUsuario() {
     limpiarPantalla();
-    cargarUsuariosMemoria();
 
     std::string nombre, username, password, perfil;
     int opcionPerfil;
@@ -38,6 +37,7 @@ void crearUsuario() {
         pausarPantalla();
         return;
     }
+
     // validar longitud de los campos
     if (!validarLongitudesUsuario(nombre, username, password)) {
         pausarPantalla();
@@ -78,15 +78,16 @@ void crearUsuario() {
     nuevoUsuario.perfil = perfil;
 
     agregarUsuarioMemoria(nuevoUsuario);
-    guardarUsuariosArchivo();
+    // se guardará al salir
 
     std::cout << "Usuario '" << username << "' (ID: " << nuevoUsuario.id << ") creado exitosamente" << std::endl;
+    std::cout << "Nota: Los cambios se guardarán al salir del programa" << std::endl;
     pausarPantalla();
 }
 
 void eliminarUsuario() {
     limpiarPantalla();
-    cargarUsuariosMemoria();
+    // YA NO CARGAMOS AQUÍ
 
     if (listaUsuarios.usuarios.empty()) {
         std::cout << "No hay usuarios para eliminar." << std::endl;
@@ -151,23 +152,20 @@ void eliminarUsuario() {
 
     if (confirmar != 's' && confirmar != 'S') {
         std::cout << "Operación cancelada." << std::endl;
+        pausarPantalla();
         return;
     }
 
     // Eliminar usuario de la lista
     listaUsuarios.usuarios.erase(listaUsuarios.usuarios.begin() + indice);
 
-    // Guardar cambios en archivo
-    guardarUsuariosArchivo();
-
     std::cout << "\nUsuario '" << usuarioAEliminar.nombre << "' eliminado exitosamente." << std::endl;
-
+    std::cout << "Nota: Los cambios se guardarán al salir del programa" << std::endl;
     pausarPantalla();
 }
 
 void listarUsuarios() {
     limpiarPantalla();
-    cargarUsuariosMemoria();
 
     std::cout << "Id\tNombre\t\tUsername\tPerfil" << std::endl;
 
@@ -184,7 +182,6 @@ void listarUsuarios() {
 
     pausarPantalla();
 }
-
 void agregarUsuarioMemoria(const Usuario& usuario) {
     listaUsuarios.usuarios.push_back(usuario);
 }

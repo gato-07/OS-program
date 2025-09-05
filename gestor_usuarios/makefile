@@ -7,11 +7,12 @@ SRCDIR = src
 INCDIR = include
 OBJDIR = obj
 BINDIR = bin
+DATADIR = ../data
 
 # Archivos fuente y objetos
-SOURCES = main.cpp sistema.cpp menu.cpp usuario.cpp archivo.cpp utils.cpp
+SOURCES = main.cpp menu.cpp usuario.cpp archivo.cpp utils.cpp
 OBJECTS = $(SOURCES:%.cpp=$(OBJDIR)/%.o)
-TARGET = $(BINDIR)/gestor
+TARGET = $(BINDIR)/gestor_usuarios
 
 # Regla principal
 all: directories $(TARGET)
@@ -20,6 +21,7 @@ all: directories $(TARGET)
 directories:
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(BINDIR)
+	@mkdir -p $(DATADIR)
 
 # Crear el ejecutable
 $(TARGET): $(OBJECTS)
@@ -31,12 +33,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Dependencias específicas (para los headers)
-$(OBJDIR)/main.o: $(SRCDIR)/main.cpp $(INCDIR)/sistema.h
-$(OBJDIR)/sistema.o: $(SRCDIR)/sistema.cpp $(INCDIR)/sistema.h $(INCDIR)/archivo.h $(INCDIR)/menu.h
+$(OBJDIR)/main.o: $(SRCDIR)/main.cpp $(INCDIR)/menu.h $(INCDIR)/archivo.h $(INCDIR)/utils.h
 $(OBJDIR)/menu.o: $(SRCDIR)/menu.cpp $(INCDIR)/menu.h $(INCDIR)/usuario.h $(INCDIR)/utils.h
 $(OBJDIR)/usuario.o: $(SRCDIR)/usuario.cpp $(INCDIR)/usuario.h $(INCDIR)/archivo.h $(INCDIR)/utils.h
 $(OBJDIR)/archivo.o: $(SRCDIR)/archivo.cpp $(INCDIR)/archivo.h $(INCDIR)/usuario.h
-$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(INCDIR)/utils.h
+$(OBJDIR)/utils.o: $(SRCDIR)/utils.cpp $(INCDIR)/utils.h $(INCDIR)/estructuras.h
 
 # Limpiar archivos compilados
 clean:

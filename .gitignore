@@ -3,3 +3,6 @@ proyecto-entrega1.pdf
 *.o
 gestor
 .env
+bin/
+obj/
+proyecto-entrega2.pdf

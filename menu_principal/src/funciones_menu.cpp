@@ -3,9 +3,7 @@
 #include <algorithm>
 #include <cctype>
 
-// Solo las funciones específicas del menú que no están duplicadas
 
-// Función para validar palíndromo
 bool esPalindromo(const std::string& texto) {
     std::string textoLimpio;
 

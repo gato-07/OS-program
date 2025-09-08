@@ -9,7 +9,7 @@ OBJDIR = obj
 BINDIR = bin
 
 # Archivos fuente y objetos
-SOURCES = main.cpp menu.cpp autenticacion.cpp perfiles.cpp funciones_menu.cpp
+SOURCES = main.cpp menu.cpp autenticacion.cpp perfiles.cpp funciones_menu.cpp utils.cpp
 OBJECTS = $(SOURCES:%.cpp=$(OBJDIR)/%.o)
 TARGET = $(BINDIR)/menu_principal
 

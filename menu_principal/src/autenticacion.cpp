@@ -9,7 +9,15 @@ std::vector<Usuario> listaUsuarios;
 
 bool cargarUsuarios() {
     const char* userFile = getenv("USER_FILE");
-    std::string rutaUsuarios = userFile ? userFile : "data/usuarios.dat";
+    std::string rutaUsuarios;
+
+    if (userFile) {
+        rutaUsuarios = userFile;
+    } else {
+        // Si no hay variable de entorno, usar ruta por defecto
+        rutaUsuarios = "../data/usuarios.dat";
+    }
+
     std::ifstream archivo(rutaUsuarios, std::ios::binary);
 
     if (!archivo.is_open()) {
@@ -21,7 +29,7 @@ bool cargarUsuarios() {
     listaUsuarios.clear();
     UsuarioTemporal temp;
 
-    // Leer usuarios del archivo binario
+    // Leer usuarios del archivo
     while (archivo.read(reinterpret_cast<char*>(&temp), sizeof(UsuarioTemporal))) {
         Usuario usuario;
         usuario.id = temp.id;
@@ -142,11 +150,17 @@ void cerrarSesion() {
 bool cargarVariablesEntorno() {
     std::ifstream archivo("../.env");
     if (!archivo.is_open()) {
-        std::cout << "Advertencia: No se encontró archivo .env" << std::endl;
-        return false;
+        // Intentar en el directorio actual también
+        archivo.open(".env");
+        if (!archivo.is_open()) {
+            std::cout << "Advertencia: No se encontró archivo .env" << std::endl;
+            return false;
+        }
     }
 
     std::string linea;
+    int variablesCargadas = 0;
+
     while (std::getline(archivo, linea)) {
         if (linea.empty() || linea[0] == '#') continue;
 
@@ -155,13 +169,33 @@ bool cargarVariablesEntorno() {
             std::string variable = linea.substr(0, pos);
             std::string valor = linea.substr(pos + 1);
 
+            // Quitar comillas si las tiene
+            if (!valor.empty() && valor.front() == '"' && valor.back() == '"') {
+                valor = valor.substr(1, valor.length() - 2);
+            }
+
+            // Ajustar rutas relativas
+            if (variable == "USER_FILE" || variable == "PERFILES_FILE") {
+                if (valor.substr(0, 3) != "../") {
+                    valor = "../" + valor;
+                }
+            }
+
             // Establecer variable de entorno
             setenv(variable.c_str(), valor.c_str(), 1);
+            variablesCargadas++;
+            std::cout << "Variable cargada: " << variable << " = " << valor << std::endl;
         }
     }
 
     archivo.close();
-    return true;
+
+    if (variablesCargadas > 0) {
+        std::cout << "Se cargaron " << variablesCargadas << " variables de entorno" << std::endl;
+        return true;
+    }
+
+    return false;
 }
 
 std::string obtenerVariable(const std::string& nombre) {

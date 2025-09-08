@@ -1,7 +1,9 @@
 #include "../include/autenticacion.h"
 #include "../include/perfiles.h"
+#include "../include/utils.h"
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <algorithm>
 #include <cctype>
 
@@ -41,6 +43,7 @@ OpcionMenu opcionesMenu[] = {
 const int NUM_OPCIONES = sizeof(opcionesMenu) / sizeof(OpcionMenu);
 
 void mostrarMenu() {
+    limpiarPantalla();
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "           MENÚ PRINCIPAL DEL SISTEMA" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -72,14 +75,19 @@ void procesarOpcion(int opcion) {
 
     if (opcionSeleccionada == nullptr) {
         std::cout << "Error: Opción no válida" << std::endl;
+        pausarPantalla();
         return;
     }
 
     // Verificar permisos (excepto para salir)
     if (opcion != 0 && !validarOpcionPermitida(opcion)) {
         std::cout << "Error: No tiene permisos para acceder a esta opción" << std::endl;
+        pausarPantalla();
         return;
     }
+
+    // Limpiar pantalla antes de ejecutar la opción
+    limpiarPantalla();
 
     // Ejecutar la función correspondiente
     if (opcionSeleccionada->funcion != nullptr) {
@@ -92,28 +100,29 @@ void procesarOpcion(int opcion) {
 void adminUsuariosPerfiles() {
     std::cout << "=== ADMINISTRACIÓN DE USUARIOS Y PERFILES ===" << std::endl;
     std::cout << "Esta opción solo está disponible para usuarios con perfil ADMIN" << std::endl;
-    std::cout << "Funcionalidad en construcción..." << std::endl;
-
-    // Aquí se podría llamar al gestor de usuarios si fuera necesario
-    // int resultado = system("cd ../gestor_usuarios && make && ./bin/gestor_usuarios");
+    std::cout << "\nFuncionalidad en construcción..." << std::endl;
+    pausarPantalla();
 }
 
 void multiplicacionMatrices() {
     std::cout << "=== MULTIPLICACIÓN DE MATRICES NxN ===" << std::endl;
     std::cout << "Esta funcionalidad está disponible como programa independiente." << std::endl;
-    std::cout << "Use: ./multiplicador_matrices/bin/multiplicador_matrices archivo_a archivo_b separador" << std::endl;
-    std::cout << "Funcionalidad en construcción..." << std::endl;
+    std::cout << "\nUse: ./multiplicador_matrices/bin/multiplicador_matrices archivo_a archivo_b separador" << std::endl;
+    std::cout << "\nFuncionalidad en construcción..." << std::endl;
+    pausarPantalla();
 }
 
 void juego() {
     std::cout << "=== JUEGO ===" << std::endl;
-    std::cout << "Funcionalidad en construcción..." << std::endl;
+    std::cout << "\nFuncionalidad en construcción..." << std::endl;
+    pausarPantalla();
 }
 
 void validadorPalindromos() {
     bool continuar = true;
 
     while (continuar) {
+        limpiarPantalla();
         std::string texto;
         char opcion;
 
@@ -124,6 +133,7 @@ void validadorPalindromos() {
 
         if (texto.empty()) {
             std::cout << "Error: No se ingresó ningún texto" << std::endl;
+            pausarPantalla();
             continue;
         }
 
@@ -152,6 +162,7 @@ void validadorPalindromos() {
             std::cout << "Operación cancelada" << std::endl;
         } else {
             std::cout << "Opción no válida" << std::endl;
+            pausarPantalla();
             continue;
         }
 
@@ -160,12 +171,14 @@ void validadorPalindromos() {
     }
 
     std::cout << "Volviendo al menú principal..." << std::endl;
+    pausarPantalla();
 }
 
 void calculadoraFuncion() {
     bool continuar = true;
 
     while (continuar) {
+        limpiarPantalla();
         double x, resultado;
 
         std::cout << "\n=== CALCULADORA f(x) = x² + 2x + 8 ===" << std::endl;
@@ -173,7 +186,8 @@ void calculadoraFuncion() {
         std::cout << "\nIngrese el valor de x: ";
 
         if (!leerNumeroReal(x)) {
-            continue; // Si hay error en la entrada, repetir
+            pausarPantalla();
+            continue;
         }
 
         // Calcular f(x) = x² + 2x + 8
@@ -194,23 +208,56 @@ void calculadoraFuncion() {
     }
 
     std::cout << "Volviendo al menú principal..." << std::endl;
+    pausarPantalla();
 }
 
 void contadorTexto() {
     bool continuar = true;
 
     while (continuar) {
+        limpiarPantalla();
         std::string texto;
         int vocales, consonantes, especiales, palabras;
 
         std::cout << "\n=== CONTADOR DE TEXTO ===" << std::endl;
         std::cout << "Esta función analiza un texto y cuenta diferentes tipos de caracteres" << std::endl;
-        std::cout << "\nIngrese el texto a analizar: ";
-        std::cin.ignore(); // Limpiar buffer
-        std::getline(std::cin, texto);
+
+        // Verificar si hay archivo de trabajo
+        if (!sesion.archivoTrabajo.empty()) {
+            std::cout << "\nArchivo de trabajo disponible: " << sesion.archivoTrabajo << std::endl;
+            std::cout << "¿Desea usar el archivo de trabajo? (s/n): ";
+            char usar;
+            std::cin >> usar;
+            std::cin.ignore();
+
+            if (usar == 's' || usar == 'S') {
+                std::ifstream archivo(sesion.archivoTrabajo);
+                if (archivo.is_open()) {
+                    std::string linea;
+                    texto = "";
+                    while (std::getline(archivo, linea)) {
+                        texto += linea + " ";
+                    }
+                    archivo.close();
+                    std::cout << "Archivo cargado exitosamente." << std::endl;
+                } else {
+                    std::cout << "Error: No se pudo abrir el archivo." << std::endl;
+                    std::cout << "\nIngrese el texto a analizar manualmente: ";
+                    std::getline(std::cin, texto);
+                }
+            } else {
+                std::cout << "\nIngrese el texto a analizar: ";
+                std::getline(std::cin, texto);
+            }
+        } else {
+            std::cout << "\nIngrese el texto a analizar: ";
+            std::cin.ignore(); // Limpiar buffer
+            std::getline(std::cin, texto);
+        }
 
         if (texto.empty()) {
             std::cout << "Error: No se ingresó ningún texto" << std::endl;
+            pausarPantalla();
             continue;
         }
 
@@ -220,7 +267,14 @@ void contadorTexto() {
         // Mostrar resumen de conteo
         std::cout << "\n" << std::string(50, '-') << std::endl;
         std::cout << "RESUMEN DE CONTEO:" << std::endl;
-        std::cout << "Texto analizado: '" << texto << "'" << std::endl;
+
+        // Mostrar solo los primeros 100 caracteres del texto si es muy largo
+        if (texto.length() > 100) {
+            std::cout << "Texto analizado: '" << texto.substr(0, 100) << "...'" << std::endl;
+        } else {
+            std::cout << "Texto analizado: '" << texto << "'" << std::endl;
+        }
+
         std::cout << "Longitud total: " << texto.length() << " caracteres" << std::endl;
         std::cout << std::string(30, '-') << std::endl;
         std::cout << "• Cantidad de vocales: " << vocales << std::endl;
@@ -234,8 +288,10 @@ void contadorTexto() {
     }
 
     std::cout << "Volviendo al menú principal..." << std::endl;
+    pausarPantalla();
 }
 
 void salir() {
     std::cout << "Cerrando sesión y saliendo del sistema..." << std::endl;
+    // No necesita pausarPantalla porque el programa termina
 }

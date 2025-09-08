@@ -10,7 +10,14 @@ std::map<std::string, Perfil> perfilesDisponibles;
 bool cargarPerfiles() {
     // Obtener ruta del archivo desde variable de entorno
     const char* perfilesFile = getenv("PERFILES_FILE");
-    std::string rutaPerfiles = perfilesFile ? perfilesFile : "data/PERFILES.txt";
+    std::string rutaPerfiles;
+
+    if (perfilesFile) {
+        rutaPerfiles = perfilesFile;
+    } else {
+        // Si no hay variable de entorno, usar ruta por defecto
+        rutaPerfiles = "../data/PERFILES.txt";
+    }
 
     std::ifstream archivo(rutaPerfiles);
 

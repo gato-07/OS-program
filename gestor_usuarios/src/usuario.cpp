@@ -55,10 +55,10 @@ void crearUsuario() {
         std::cout << "Ingrese perfil (1.admin o 2.general): ";
         if (std::cin >> opcionPerfil) {
             if (opcionPerfil == 1) {
-                perfil = "admin";
+                perfil = "ADMIN";
                 entradaValida = true;
             } else if (opcionPerfil == 2) {
-                perfil = "general";
+                perfil = "GENERAL";
                 entradaValida = true;
             } else {
                 std::cout << "Opción inválida. Por favor, ingrese 1 o 2." << std::endl;

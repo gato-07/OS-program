@@ -8,10 +8,8 @@ SesionUsuario sesion = {false, Usuario(), Perfil(), ""};
 std::vector<Usuario> listaUsuarios;
 
 bool cargarUsuarios() {
-    // Obtener ruta del archivo desde variable de entorno
     const char* userFile = getenv("USER_FILE");
     std::string rutaUsuarios = userFile ? userFile : "data/usuarios.dat";
-
     std::ifstream archivo(rutaUsuarios, std::ios::binary);
 
     if (!archivo.is_open()) {
@@ -142,8 +140,7 @@ void cerrarSesion() {
 }
 
 bool cargarVariablesEntorno() {
-    std::ifstream archivo(".env");
-
+    std::ifstream archivo("../.env");
     if (!archivo.is_open()) {
         std::cout << "Advertencia: No se encontró archivo .env" << std::endl;
         return false;

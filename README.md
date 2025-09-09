@@ -7,8 +7,12 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
    make  
    make run
 # Caracteristicas
-  El programa cuenta con un menu principal que conecta las aplicaciones del SO
+  El programa cuenta con un menu principal que da acceso a todas las aplicaciones del SO.
 ## Menu
+ 
+## Gestor de usuarios
+
+ Este programa despliega un menu para Registrar, Ver y Eliminar usuarios del SO.
 
 ## Multiplicador de matrices
 

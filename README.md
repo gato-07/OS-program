@@ -3,7 +3,7 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
 
 # Compilacion y ejecucion
  Compilar desde menu_principal/makefile
- en terminal:
+ en terminal:  
    make  
    make run
 # Caracteristicas

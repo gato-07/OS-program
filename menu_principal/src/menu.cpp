@@ -6,6 +6,8 @@
 #include <fstream>
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
+#include <unistd.h>
 
 // Declaraciones de funciones de las opciones del menú
 void adminUsuariosPerfiles();
@@ -14,7 +16,9 @@ void juego();
 void validadorPalindromos();
 void calculadoraFuncion();
 void contadorTexto();
+void indiceInvertido();
 void salir();
+std::filesystem::path getRutaEjecutable(const std::string& var);
 
 // Funciones auxiliares declaradas en funciones_menu.cpp
 extern bool esPalindromo(const std::string& texto);
@@ -37,6 +41,7 @@ OpcionMenu opcionesMenu[] = {
     {4, "¿Es palíndromo?", validadorPalindromos},
     {5, "Calcular f(x)=x²+2x+8", calculadoraFuncion},
     {6, "Contador de texto", contadorTexto},
+    {7, "Crear indice invertido", indiceInvertido},
     {0, "Salir", salir}
 };
 
@@ -44,6 +49,7 @@ const int NUM_OPCIONES = sizeof(opcionesMenu) / sizeof(OpcionMenu);
 
 void mostrarMenu() {
     limpiarPantalla();
+    std::cout << "PID del proceso: " << getpid() << std::endl;
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "           MENÚ PRINCIPAL DEL SISTEMA" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -64,7 +70,6 @@ void mostrarMenu() {
 }
 
 void procesarOpcion(int opcion) {
-    // Buscar la opción en el array
     OpcionMenu* opcionSeleccionada = nullptr;
     for (int i = 0; i < NUM_OPCIONES; i++) {
         if (opcionesMenu[i].id == opcion) {
@@ -79,36 +84,85 @@ void procesarOpcion(int opcion) {
         return;
     }
 
-    // Verificar permisos (excepto para salir)
     if (opcion != 0 && !validarOpcionPermitida(opcion)) {
         std::cout << "Error: No tiene permisos para acceder a esta opción" << std::endl;
         pausarPantalla();
         return;
     }
 
-    // Limpiar pantalla antes de ejecutar la opción
     limpiarPantalla();
 
-    // Ejecutar la función correspondiente
     if (opcionSeleccionada->funcion != nullptr) {
         std::cout << "\n--- " << opcionSeleccionada->descripcion << " ---" << std::endl;
         opcionSeleccionada->funcion();
     }
 }
 
-// Implementaciones de las funciones del menú
+// === Implementaciones de las funciones del menú ===
+
 void adminUsuariosPerfiles() {
-    std::cout << "=== ADMINISTRACIÓN DE USUARIOS Y PERFILES ===" << std::endl;
-    std::cout << "Esta opción solo está disponible para usuarios con perfil ADMIN" << std::endl;
-    std::cout << "\nFuncionalidad en construcción..." << std::endl;
+    const char* ruta = std::getenv("ADMIN_SYS");
+    if (!ruta) {
+        std::cerr << "Variable de entorno ADMIN_SYS no definida\n";
+        return;
+    }
+
+    std::filesystem::path fullPath = std::filesystem::path(ruta);
+    if (!std::filesystem::exists(fullPath)) {
+        std::cerr << "Error: ejecutable no encontrado en " << fullPath << "\n";
+        return;
+    }
+
+    std::cout << "Ejecutando: " << fullPath << "\n";
+    int result = system(fullPath.string().c_str());
+    std::cout << "El ejecutable terminó con código: " << result << "\n";
+    std::cout << "Volviendo al menú principal...\n";
     pausarPantalla();
 }
 
 void multiplicacionMatrices() {
-    std::cout << "=== MULTIPLICACIÓN DE MATRICES NxN ===" << std::endl;
-    std::cout << "Esta funcionalidad está disponible como programa independiente." << std::endl;
-    std::cout << "\nUse: ./multiplicador_matrices/bin/multiplicador_matrices archivo_a archivo_b separador" << std::endl;
-    std::cout << "\nFuncionalidad en construcción..." << std::endl;
+    const char* ruta = std::getenv("MULTI_M");
+    std::cout << "PID del proceso: " << getpid() << std::endl;
+    if (!ruta) {
+        std::cerr << "Variable de entorno MULTI_M no definida\n";
+        return;
+    }
+    
+    std::filesystem::path fullPath = std::filesystem::path(ruta);
+    if (!std::filesystem::exists(fullPath)) {
+        std::cerr << "Error: ejecutable no encontrado en " << fullPath << "\n";
+        return;
+    }
+    
+    // Preguntar matrices al usuario
+    std::string matrizA, matrizB, separador;
+    std::cout << "Indique el archivo de la primera matriz (ej: ../data/matrices/matrizA.txt): ";
+    std::cin >> matrizA;
+
+    std::cout << "Indique el archivo de la segunda matriz (ej: ../data/matrices/matrizB.txt): ";
+    std::cin >> matrizB;
+
+    std::cout << "Indique el separador usado en los archivos (ej: , o ; o espacio): ";
+    std::cin >> separador;
+
+    // Armar comando
+    std::string command = fullPath.string() + " " + matrizA + " " + matrizB + " " + separador;
+
+    std::cout << "\nEjecutando: " << command << "\n";
+
+    // Decidir si lanzamos la ejecucion o volvemos al menu principal
+    char opcion;
+    std::cout << "¿Desea ejecutar la multiplicación de matrices? (s/n): ";
+    std::cin >> opcion;
+    if (opcion != 's' && opcion != 'S') {
+        std::cout << "Operación cancelada. Volviendo al menú principal...\n";
+        pausarPantalla();
+        return;
+    }
+    int result = system(command.c_str());
+
+    std::cout << "\nEl ejecutable terminó con código: " << result << "\n";
+    std::cout << "Volviendo al menú principal...\n";
     pausarPantalla();
 }
 
@@ -120,15 +174,15 @@ void juego() {
 
 void validadorPalindromos() {
     bool continuar = true;
-
     while (continuar) {
         limpiarPantalla();
+        std::cout << "PID del proceso: " << getpid() << std::endl;
         std::string texto;
         char opcion;
 
         std::cout << "\n=== VALIDADOR DE PALÍNDROMOS ===" << std::endl;
         std::cout << "Ingrese el texto a validar: ";
-        std::cin.ignore(); // Limpiar buffer
+        std::cin.ignore();
         std::getline(std::cin, texto);
 
         if (texto.empty()) {
@@ -138,26 +192,12 @@ void validadorPalindromos() {
         }
 
         std::cout << "\nTexto ingresado: '" << texto << "'" << std::endl;
-        std::cout << "\nOpciones disponibles:" << std::endl;
-        std::cout << "(v) Validar" << std::endl;
-        std::cout << "(c) Cancelar" << std::endl;
-        std::cout << "Seleccione una opción: ";
+        std::cout << "(v) Validar | (c) Cancelar\nSeleccione una opción: ";
         std::cin >> opcion;
 
         if (opcion == 'v' || opcion == 'V') {
             bool resultado = esPalindromo(texto);
-
-            std::cout << "\n" << std::string(50, '-') << std::endl;
-            std::cout << "RESULTADO DE VALIDACIÓN:" << std::endl;
-            std::cout << "Texto: '" << texto << "'" << std::endl;
-
-            if (resultado) {
-                std::cout << "✓ SÍ es un palíndromo" << std::endl;
-            } else {
-                std::cout << "✗ NO es un palíndromo" << std::endl;
-            }
-            std::cout << std::string(50, '-') << std::endl;
-
+            std::cout << (resultado ? "✓ SÍ es un palíndromo" : "✗ NO es un palíndromo") << std::endl;
         } else if (opcion == 'c' || opcion == 'C') {
             std::cout << "Operación cancelada" << std::endl;
         } else {
@@ -166,66 +206,48 @@ void validadorPalindromos() {
             continue;
         }
 
-        // Preguntar si desea continuar
         continuar = mostrarOpcionVolver();
     }
-
     std::cout << "Volviendo al menú principal..." << std::endl;
     pausarPantalla();
 }
 
 void calculadoraFuncion() {
     bool continuar = true;
-
     while (continuar) {
         limpiarPantalla();
+        std::cout << "PID del proceso: " << getpid() << std::endl;
         double x, resultado;
 
         std::cout << "\n=== CALCULADORA f(x) = x² + 2x + 8 ===" << std::endl;
-        std::cout << "Esta función calcula el valor de f(x) = x² + 2x + 8 para números reales" << std::endl;
-        std::cout << "\nIngrese el valor de x: ";
+        std::cout << "Ingrese el valor de x: ";
 
         if (!leerNumeroReal(x)) {
             pausarPantalla();
             continue;
         }
 
-        // Calcular f(x) = x² + 2x + 8
         resultado = x * x + 2 * x + 8;
+        std::cout << "f(" << x << ") = " << resultado << std::endl;
 
-        // Mostrar resultado con especificación detallada
-        std::cout << "\n" << std::string(50, '-') << std::endl;
-        std::cout << "CÁLCULO DE LA FUNCIÓN:" << std::endl;
-        std::cout << "f(x) = x² + 2x + 8" << std::endl;
-        std::cout << "f(" << std::fixed << std::setprecision(2) << x << ") = "
-                  << "(" << x << ")² + 2(" << x << ") + 8" << std::endl;
-        std::cout << "f(" << x << ") = " << (x*x) << " + " << (2*x) << " + 8" << std::endl;
-        std::cout << "f(" << x << ") = " << std::setprecision(4) << resultado << std::endl;
-        std::cout << std::string(50, '-') << std::endl;
-
-        // Preguntar si desea continuar (opción VOLVER)
         continuar = mostrarOpcionVolver();
     }
-
-    std::cout << "Volviendo al menú principal..." << std::endl;
     pausarPantalla();
 }
 
 void contadorTexto() {
     bool continuar = true;
-
     while (continuar) {
         limpiarPantalla();
+        std::cout << "PID del proceso: " << getpid() << std::endl;
         std::string texto;
         int vocales, consonantes, especiales, palabras;
 
         std::cout << "\n=== CONTADOR DE TEXTO ===" << std::endl;
-        std::cout << "Esta función analiza un texto y cuenta diferentes tipos de caracteres" << std::endl;
 
-        // Verificar si hay archivo de trabajo
         if (!sesion.archivoTrabajo.empty()) {
-            std::cout << "\nArchivo de trabajo disponible: " << sesion.archivoTrabajo << std::endl;
-            std::cout << "¿Desea usar el archivo de trabajo? (s/n): ";
+            std::cout << "Archivo de trabajo: " << sesion.archivoTrabajo << std::endl;
+            std::cout << "¿Desea usarlo? (s/n): ";
             char usar;
             std::cin >> usar;
             std::cin.ignore();
@@ -239,59 +261,90 @@ void contadorTexto() {
                         texto += linea + " ";
                     }
                     archivo.close();
-                    std::cout << "Archivo cargado exitosamente." << std::endl;
                 } else {
-                    std::cout << "Error: No se pudo abrir el archivo." << std::endl;
-                    std::cout << "\nIngrese el texto a analizar manualmente: ";
+                    std::cout << "Error al abrir el archivo. Ingrese texto manual: ";
                     std::getline(std::cin, texto);
                 }
             } else {
-                std::cout << "\nIngrese el texto a analizar: ";
+                std::cout << "Ingrese texto: ";
                 std::getline(std::cin, texto);
             }
         } else {
-            std::cout << "\nIngrese el texto a analizar: ";
-            std::cin.ignore(); // Limpiar buffer
+            std::cout << "Ingrese texto: ";
+            std::cin.ignore();
             std::getline(std::cin, texto);
         }
 
         if (texto.empty()) {
-            std::cout << "Error: No se ingresó ningún texto" << std::endl;
+            std::cout << "Texto vacío" << std::endl;
             pausarPantalla();
             continue;
         }
 
-        // Analizar el texto
         analizarTexto(texto, vocales, consonantes, especiales, palabras);
 
-        // Mostrar resumen de conteo
-        std::cout << "\n" << std::string(50, '-') << std::endl;
-        std::cout << "RESUMEN DE CONTEO:" << std::endl;
+        std::cout << "• Vocales: " << vocales
+                  << " • Consonantes: " << consonantes
+                  << " • Especiales: " << especiales
+                  << " • Palabras: " << palabras << std::endl;
 
-        // Mostrar solo los primeros 100 caracteres del texto si es muy largo
-        if (texto.length() > 100) {
-            std::cout << "Texto analizado: '" << texto.substr(0, 100) << "...'" << std::endl;
-        } else {
-            std::cout << "Texto analizado: '" << texto << "'" << std::endl;
-        }
-
-        std::cout << "Longitud total: " << texto.length() << " caracteres" << std::endl;
-        std::cout << std::string(30, '-') << std::endl;
-        std::cout << "• Cantidad de vocales: " << vocales << std::endl;
-        std::cout << "• Cantidad de consonantes: " << consonantes << std::endl;
-        std::cout << "• Cantidad de caracteres especiales: " << especiales << std::endl;
-        std::cout << "• Cantidad de palabras: " << palabras << std::endl;
-        std::cout << std::string(50, '-') << std::endl;
-
-        // Preguntar si desea continuar (opción VOLVER)
         continuar = mostrarOpcionVolver();
     }
-
-    std::cout << "Volviendo al menú principal..." << std::endl;
     pausarPantalla();
+}
+
+void indiceInvertido() {
+    bool continuar = true;
+    while (continuar) {
+        limpiarPantalla();
+        std::string nombreArchivo, carpetaLibros;
+        std::cout << "PID del proceso: " << getpid() << std::endl;
+
+        std::cout << "\n === Crear Indice Invertido ===" << std::endl;
+        std::cout << "Ingrese el nombre del archivo (.idx): ";
+        std::cin.ignore();
+        std::getline(std::cin, nombreArchivo);
+
+        if (nombreArchivo.size() < 4 || nombreArchivo.substr(nombreArchivo.size() - 4) != ".idx") {
+            std::cout << "Error: debe terminar en .idx" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+
+        std::cout << "Ingrese carpeta de libros: ";
+        std::getline(std::cin, carpetaLibros);
+
+        if (carpetaLibros.empty()) {
+            std::cout << "Error: path vacío" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+
+        const char* programa = std::getenv("CREATE_INDEX");
+        if (!programa) {
+            std::cout << "Error: CREATE_INDEX no definida" << std::endl;
+            pausarPantalla();
+            return;
+        }
+
+        std::string comando = std::string(programa) + " " + nombreArchivo + " " + carpetaLibros;
+        std::cout << "Ejecutando: " << comando << std::endl;
+
+        int resultado = system(comando.c_str());
+        if (resultado == 0) std::cout << "Indice creado correctamente\n";
+        else std::cout << "Error al ejecutar el programa externo\n";
+
+        continuar = mostrarOpcionVolver();
+    }
+    pausarPantalla();
+}
+
+std::filesystem::path getRutaEjecutable(const std::string& var) {
+    const char* ruta = std::getenv(var.c_str());
+    if (!ruta) return "";
+    return std::filesystem::absolute(std::filesystem::path(ruta));
 }
 
 void salir() {
     std::cout << "Cerrando sesión y saliendo del sistema..." << std::endl;
-    // No necesita pausarPantalla porque el programa termina
 }

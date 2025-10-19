@@ -35,11 +35,18 @@ bool cargarMatriz(const std::string& archivo, char separador, Matriz& matriz) {
             }
 
             try {
-                double num = std::stod(valor);
+                size_t pos;
+                double num = std::stod(valor, &pos);
+                // Validar que se haya consumido toda la cadena
+                if (pos != valor.length()) {
+                    std::cerr << "Error: Valor no numérico encontrado: '" << valor
+                            << "' en archivo " << archivo << std::endl;
+                    return false;
+                }
                 fila.push_back(num);
             } catch (const std::exception& e) {
                 std::cerr << "Error: Valor no numérico encontrado: '" << valor
-                          << "' en archivo " << archivo << std::endl;
+                        << "' en archivo " << archivo << std::endl;
                 return false;
             }
         }

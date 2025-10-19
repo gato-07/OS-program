@@ -102,6 +102,7 @@ void procesarOpcion(int opcion) {
 
 void adminUsuariosPerfiles() {
     const char* ruta = std::getenv("ADMIN_SYS");
+    std::cout << "PID del proceso: " << getpid() << std::endl;
     if (!ruta) {
         std::cerr << "Variable de entorno ADMIN_SYS no definida\n";
         return;
@@ -167,6 +168,7 @@ void multiplicacionMatrices() {
 }
 
 void juego() {
+    std::cout << "PID del proceso: " << getpid() << std::endl;
     std::cout << "=== JUEGO ===" << std::endl;
     std::cout << "\nFuncionalidad en construcción..." << std::endl;
     pausarPantalla();

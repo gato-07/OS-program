@@ -33,6 +33,7 @@ int main(int argc, char* argv[]){
     for (const auto& entry : fs::directory_iterator(carpetaLibros)) {
         if (entry.is_regular_file() && entry.path().extension() == ".txt") {
             std::string nombreArchivo = entry.path().filename().string();
+            std::cout << "Leyendo libro: " << nombreArchivo << "..." << std::endl;
             std::ifstream archivo(entry.path());
 
             if (!archivo.is_open()) {

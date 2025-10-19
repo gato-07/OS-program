@@ -2,6 +2,7 @@
 #include "usuario.h"
 #include "utils.h"
 #include <iostream>
+#include <unistd.h>
 
 std::vector<OpcionMenu> opcionesMenu;
 bool sistemaActivo = true;
@@ -18,6 +19,7 @@ void iniciarMenu() {
 
 void mostrarMenu() {
     limpiarPantalla();
+    std::cout << "PID del proceso: " << getpid() << std::endl;
     std::cout << "Gestor de Usuarios:" << std::endl;
     for (const auto& opcion : opcionesMenu) {
         std::cout << opcion.id << ". " << opcion.descripcion << std::endl;

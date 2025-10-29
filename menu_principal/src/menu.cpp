@@ -17,6 +17,7 @@ void validadorPalindromos();
 void calculadoraFuncion();
 void contadorTexto();
 void indiceInvertido();
+void indiceInvertidoParalelo();
 void salir();
 std::filesystem::path getRutaEjecutable(const std::string& var);
 
@@ -42,6 +43,7 @@ OpcionMenu opcionesMenu[] = {
     {5, "Calcular f(x)=x²+2x+8", calculadoraFuncion},
     {6, "Contador de texto", contadorTexto},
     {7, "Crear indice invertido", indiceInvertido},
+    {8, "Crear indice invertido paralelo", indiceInvertidoParalelo},
     {0, "Salir", salir}
 };
 
@@ -128,13 +130,13 @@ void multiplicacionMatrices() {
         std::cerr << "Variable de entorno MULTI_M no definida\n";
         return;
     }
-    
+
     std::filesystem::path fullPath = std::filesystem::path(ruta);
     if (!std::filesystem::exists(fullPath)) {
         std::cerr << "Error: ejecutable no encontrado en " << fullPath << "\n";
         return;
     }
-    
+
     // Preguntar matrices al usuario
     std::string matrizA, matrizB, separador;
     std::cout << "Indique el archivo de la primera matriz (ej: ../data/matrices/matrizA.txt): ";
@@ -335,6 +337,69 @@ void indiceInvertido() {
         int resultado = system(comando.c_str());
         if (resultado == 0) std::cout << "Indice creado correctamente\n";
         else std::cout << "Error al ejecutar el programa externo\n";
+
+        continuar = mostrarOpcionVolver();
+    }
+    pausarPantalla();
+}
+
+void indiceInvertidoParalelo() {
+    bool continuar = true;
+    while (continuar) {
+        limpiarPantalla();
+        std::string nombreArchivo, carpetaLibros;
+        std::cout << "PID del proceso: " << getpid() << std::endl;
+
+        std::cout << "\n === Crear Indice Invertido PARALELO ===" << std::endl;
+        std::cout << "Esta versión usa procesamiento paralelo con threads" << std::endl;
+
+        // Mostrar configuración actual
+        const char* nThreads = std::getenv("N_THREADS");
+        const char* nLote = std::getenv("N_LOTE");
+        const char* mapaLibros = std::getenv("MAPA_LIBROS");
+
+        std::cout << "\nConfiguración actual:" << std::endl;
+        std::cout << "  N_THREADS: " << (nThreads ? nThreads : "4 (default)") << std::endl;
+        std::cout << "  N_LOTE: " << (nLote ? nLote : "10 (default)") << std::endl;
+        std::cout << "  MAPA_LIBROS: " << (mapaLibros ? mapaLibros : "data/mapa_libros.txt (default)") << std::endl;
+
+        std::cout << "\nIngrese el nombre del archivo (.idx): ";
+        std::cin.ignore();
+        std::getline(std::cin, nombreArchivo);
+
+        if (nombreArchivo.size() < 4 || nombreArchivo.substr(nombreArchivo.size() - 4) != ".idx") {
+            std::cout << "Error: debe terminar en .idx" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+
+        std::cout << "Ingrese carpeta de libros: ";
+        std::getline(std::cin, carpetaLibros);
+
+        if (carpetaLibros.empty()) {
+            std::cout << "Error: path vacío" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+
+        const char* programa = std::getenv("INDICE_INVERT_PARALELO");
+        if (!programa) {
+            std::cout << "Error: INDICE_INVERT_PARALELO no definida" << std::endl;
+            pausarPantalla();
+            return;
+        }
+
+        std::string comando = std::string(programa) + " " + nombreArchivo + " " + carpetaLibros;
+        std::cout << "\nEjecutando: " << comando << std::endl;
+
+        int resultado = system(comando.c_str());
+        if (resultado == 0) {
+            std::cout << "\n  Indice paralelo creado correctamente" << std::endl;
+            std::cout << "  - Archivo índice: " << nombreArchivo << std::endl;
+            std::cout << "  - Mapa de libros: " << (mapaLibros ? mapaLibros : "data/mapa_libros.txt") << std::endl;
+        } else {
+            std::cout << "\n Error al ejecutar el programa externo (código: " << resultado << ")" << std::endl;
+        }
 
         continuar = mostrarOpcionVolver();
     }

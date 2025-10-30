@@ -44,3 +44,18 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   cd OS-program/menu_principal
       make
       ./bin/menu_principal -u usuario -p password [-f archivo]
+
+## Configuración 
+  El módulo crea_indice_paralelo se puede configurar usando las siguientes variables de entorno. Si no se definen, se usarán valores por defecto.
+
+  N_THREADS: Especifica el número de hilos de procesamiento.
+
+    Por defecto: 4
+
+  N_LOTE: (Aquí debes explicar qué hace esta variable. Ej: "Define cuántos libros procesa cada hilo a la vez").
+
+    Por defecto: 10
+
+  MAPA_LIBROS: Define la ruta donde se guardará el archivo mapa_libros.txt.
+
+    Por defecto: data/mapa_libros.txt

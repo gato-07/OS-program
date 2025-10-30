@@ -8,6 +8,7 @@
 #include <cctype>
 #include <filesystem>
 #include <unistd.h>
+#include <cstdlib>
 
 // Declaraciones de funciones de las opciones del menú
 void adminUsuariosPerfiles();
@@ -18,6 +19,9 @@ void calculadoraFuncion();
 void contadorTexto();
 void indiceInvertido();
 void indiceInvertidoParalelo();
+void juegoHOST();
+void juegoCLIENT();
+void juego();
 void salir();
 std::filesystem::path getRutaEjecutable(const std::string& var);
 
@@ -44,6 +48,7 @@ OpcionMenu opcionesMenu[] = {
     {6, "Contador de texto", contadorTexto},
     {7, "Crear indice invertido", indiceInvertido},
     {8, "Crear indice invertido paralelo", indiceInvertidoParalelo},
+    {9, "juego", juego},
     {0, "Salir", salir}
 };
 
@@ -169,12 +174,6 @@ void multiplicacionMatrices() {
     pausarPantalla();
 }
 
-void juego() {
-    std::cout << "PID del proceso: " << getpid() << std::endl;
-    std::cout << "=== JUEGO ===" << std::endl;
-    std::cout << "\nFuncionalidad en construcción..." << std::endl;
-    pausarPantalla();
-}
 
 void validadorPalindromos() {
     bool continuar = true;
@@ -406,12 +405,61 @@ void indiceInvertidoParalelo() {
     pausarPantalla();
 }
 
+void juegoHOST() {
+    std::cout << "Lanzando servidor de juego en background..." << std::endl;
+    int rc = system("cd ../juego && nohup python3 server.py > server.log 2>&1 &");
+    if (rc != 0) {
+        std::cerr << "Error al lanzar el servidor (código " << rc << ")" << std::endl;
+    } else {
+        std::cout << "Servidor lanzado. Ver server.log para salida." << std::endl;
+    }
+    pausarPantalla();
+}
+
+
+void juegoCLIENT() {
+    std::cout << "Lanzando cliente de juego..." << std::endl;
+    int rc = system("cd ../juego && python3 client.py");
+    if (rc != 0) {
+        std::cerr << "Error al lanzar el cliente (código " << rc << ")" << std::endl;
+    }
+    pausarPantalla();
+}
+
+void juego() {
+    while (true) {
+        limpiarPantalla();
+        std::cout << "=== JUEGO ===" << std::endl;
+        std::cout << "1) Hostear partida (servidor)" << std::endl;
+        std::cout << "2) Unirse como cliente" << std::endl;
+        std::cout << "0) Volver al menú principal" << std::endl;
+        std::cout << "Seleccione una opción: ";
+        int op = 0;
+        std::cin >> op;
+        switch (op) {
+            case 1:
+                juegoHOST();
+                break;
+            case 2:
+                juegoCLIENT();
+                break;
+            case 0:
+                return;
+            default:
+                std::cout << "Opción no válida." << std::endl;
+                pausarPantalla();
+        }
+    }
+}
+
 std::filesystem::path getRutaEjecutable(const std::string& var) {
     const char* ruta = std::getenv(var.c_str());
     if (!ruta) return "";
     return std::filesystem::absolute(std::filesystem::path(ruta));
+    pausarPantalla();  
 }
 
 void salir() {
     std::cout << "Cerrando sesión y saliendo del sistema..." << std::endl;
 }
+

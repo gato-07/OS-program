@@ -20,7 +20,12 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   Programa que genera un indice invertido a partir de una carpeta con libros en formato .txt trabajando con multiples hilos de forma paralela.
 
 ## Juego
-  Construcción..
+  ### Requerimientos
+    pip install dotenv
+  ### Ejecucion
+    La opcion 9 deja escoger entre HOST y CLIENTE (jugador), basta con escogerla.
+  ### Parametros
+    Los parametros esenciales se pueden manejar desde el .env. Los nombres
 
 # Compilación y ejecución menu principal
   Cada carpeta de app cuenta con su makefile, los cuales son requeridos para el funcionamiento del menu principal. Desde cada carpeta en terminal: 

@@ -406,16 +406,32 @@ void indiceInvertidoParalelo() {
 }
 
 void juegoHOST() {
-    std::cout << "Lanzando servidor de juego en background..." << std::endl;
-    int rc = system("cd ../juego && nohup python3 server.py > server.log 2>&1 &");
+    std::cout << "Lanzando servidor de juego en nueva ventana..." << std::endl;
+#ifdef _WIN32
+    // Windows: abre nueva ventana de cmd y ejecuta el servidor
+    int rc = system("start cmd /k "cd ../juego && python server.py"");
+#else
+    // Bash/Linux/macOS: abre nueva terminal (gnome-terminal, xterm, konsole, etc.)
+    // Usa la que esté disponible en el sistema
+    int rc = system(
+        "if command -v gnome-terminal >/dev/null 2>&1; then "
+        "gnome-terminal -- bash -c 'cd ../juego && python3 server.py; exec bash'; "
+        "elif command -v xterm >/dev/null 2>&1; then "
+        "xterm -e 'cd ../juego && python3 server.py; bash'; "
+        "elif command -v konsole >/dev/null 2>&1; then "
+        "konsole --noclose -e bash -c 'cd ../juego && python3 server.py'; "
+        "else "
+        "echo 'No se encontró una terminal gráfica compatible. Ejecute manualmente: cd ../juego && python3 server.py'; "
+        "fi"
+    );
+#endif
     if (rc != 0) {
         std::cerr << "Error al lanzar el servidor (código " << rc << ")" << std::endl;
     } else {
-        std::cout << "Servidor lanzado. Ver server.log para salida." << std::endl;
+        std::cout << "Servidor lanzado en nueva ventana." << std::endl;
     }
     pausarPantalla();
 }
-
 
 void juegoCLIENT() {
     std::cout << "Lanzando cliente de juego..." << std::endl;
@@ -456,10 +472,9 @@ std::filesystem::path getRutaEjecutable(const std::string& var) {
     const char* ruta = std::getenv(var.c_str());
     if (!ruta) return "";
     return std::filesystem::absolute(std::filesystem::path(ruta));
-    pausarPantalla();  
+    pausarPantalla();
 }
 
 void salir() {
     std::cout << "Cerrando sesión y saliendo del sistema..." << std::endl;
 }
-

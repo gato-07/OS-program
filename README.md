@@ -25,7 +25,7 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   ### Ejecucion
     La opcion 9 deja escoger entre HOST y CLIENTE (jugador), basta con escogerla.
   ### Parametros
-    Los parametros esenciales se pueden manejar desde el .env. Los nombres
+    Los parametros esenciales se pueden manejar desde el .env.
 
 # Compilación y ejecución menu principal
   Cada carpeta de app cuenta con su makefile, los cuales son requeridos para el funcionamiento del menu principal. Desde cada carpeta en terminal: 

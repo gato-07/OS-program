@@ -24,8 +24,16 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
     pip install dotenv
   ### Ejecucion
     La opcion 9 deja escoger entre HOST y CLIENTE (jugador), basta con escogerla.
+    El cliente pide ingresar nombre y nombre del equipo, asegurarse de poner el mismo nombre exacto de equipo para hacer teams.
   ### Parametros
     Los parametros esenciales se pueden manejar desde el .env.
+
+    SERVER_HOST: Direccion IP, local o Ipv4 (por defecto local).
+    SERVER_PORT: Puerto (por defecto 9999, recomendado usar algun valor cercano a este).
+    GAME_MIN_TEAMS: Minimo de equipos para empezar la partida.
+    GAME_MAX_PLAYERS_PER_TEAM: Maximo de jugadores por equipo.
+    GAME_DIE_SIDES_R: Tamaño del dado que se usa para atacar, el numero que sale es el valor de tu ataque.
+    PLAYER_MAX_HP: Vida maxima de cada jugador.
 
 # Compilación y ejecución menu principal
   Cada carpeta de app cuenta con su makefile, los cuales son requeridos para el funcionamiento del menu principal. Desde cada carpeta en terminal: 

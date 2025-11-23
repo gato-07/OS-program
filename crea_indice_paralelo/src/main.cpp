@@ -483,6 +483,17 @@ int main(int argc, char* argv[]) {
     std::cout << "  Total de robos exitosos: " << totalRobos << std::endl;
     std::cout << "========================================" << std::endl;
 
+    // Log Benchmark
+    if (const char* archivoBench = std::getenv("BENCHMARK_OUTPUT")) {
+        std::ofstream logBench(archivoBench, std::ios::app);
+        if (logBench.is_open()) {
+            logBench << "(" << config.nThreads << ", " << duracionTotal.count() << ")\n";
+            logBench.close();
+        } else {
+             std::cerr << "[ERROR Worker] No pude abrir el log de benchmark: " << archivoBench << std::endl;
+        }
+    }
+    
     // PASO 4: Guardar índice invertido
     if (!guardarIndice(archivoSalida)) {
         std::cerr << "\nError: No se pudo guardar el índice" << std::endl;

@@ -22,6 +22,7 @@ void indiceInvertidoParalelo();
 void juegoHOST();
 void juegoCLIENT();
 void juego();
+void graficaParalela();
 void salir();
 std::filesystem::path getRutaEjecutable(const std::string& var);
 
@@ -49,6 +50,7 @@ OpcionMenu opcionesMenu[] = {
     {7, "Crear indice invertido", indiceInvertido},
     {8, "Crear indice invertido paralelo", indiceInvertidoParalelo},
     {9, "juego", juego},
+    {10, "Graficar rendimiento ind. inv. paralelo", graficaParalela},
     {0, "Salir", salir}
 };
 
@@ -467,6 +469,62 @@ void juego() {
         }
     }
 }
+
+void graficaParalela (){
+    bool continuar = true;
+    while (continuar) {
+
+        limpiarPantalla();
+        std::cout << "PID del proceso: " << getpid() << std::endl;
+        std::cout << "\n === Grafica rendimiento ===" << std::endl;
+        std::string carpetaLibros;
+
+        // Mostrar configuración actual
+        const char* cantThreads = std::getenv("CANT_THREADS");
+
+        std::cout << "\nConfiguración actual:" << std::endl;
+        std::cout << "\n  CANT_THREADS: " << (cantThreads ? cantThreads : "4 (default)") << std::endl;
+
+        std::cout << "\nIngrese carpeta de libros: ";
+        
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        
+        std::getline(std::cin, carpetaLibros);
+
+        if (carpetaLibros.empty()) {
+            std::cout << "Error: path vacío" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+
+        std::cout << "Iniciando Benchmark..." << std::endl;
+        
+        // Variable con ruta del ejecutable benchmark
+        const char* programa = std::getenv("BENCHMARK_RENDIMIENTO");
+        
+        if (!programa) {
+            std::cout << "Error: Variable de entorno BENCHMARK_RENDIMIENTO no definida en .env" << std::endl;
+            std::cout << "Defínela apuntando a: ../grafica_rendimiento_paralela/bin/benchmark" << std::endl;
+            pausarPantalla();
+            return; // Salir si no hay configuración
+        }
+
+        // Construimos el comando: ./bin/benchmark "ruta/a/libros"
+        std::string comando = std::string(programa) + " \"" + carpetaLibros + "\"";
+        
+        int resultado = system(comando.c_str());        
+        if (resultado != 0) {
+            std::cerr << "Error al ejecutar el programa de benchmark." << std::endl;
+        }
+
+        // Preguntar si quiere volver a ejecutar o salir
+        continuar = mostrarOpcionVolver();
+    }
+    // No pausamos aquí si 'mostrarOpcionVolver' ya maneja su flujo, 
+    // pero si sales del while, vuelves al menú principal.
+}
+    
+
 
 std::filesystem::path getRutaEjecutable(const std::string& var) {
     const char* ruta = std::getenv(var.c_str());

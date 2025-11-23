@@ -499,7 +499,6 @@ void graficaParalela (){
 
         std::cout << "Iniciando Benchmark..." << std::endl;
         
-        // Variable con ruta del ejecutable benchmark
         const char* programa = std::getenv("BENCHMARK_RENDIMIENTO");
         
         if (!programa) {
@@ -517,11 +516,8 @@ void graficaParalela (){
             std::cerr << "Error al ejecutar el programa de benchmark." << std::endl;
         }
 
-        // Preguntar si quiere volver a ejecutar o salir
         continuar = mostrarOpcionVolver();
     }
-    // No pausamos aquí si 'mostrarOpcionVolver' ya maneja su flujo, 
-    // pero si sales del while, vuelves al menú principal.
 }
     
 

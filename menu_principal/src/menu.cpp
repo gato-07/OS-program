@@ -476,19 +476,19 @@ void graficaParalela (){
 
         limpiarPantalla();
         std::cout << "PID del proceso: " << getpid() << std::endl;
-        std::cout << "\n === Grafica rendimiento ===" << std::endl;
+        std::cout << "\n === Grafica Rendimiento (Benchmark) ===" << std::endl;
+        
         std::string carpetaLibros;
+        std::string listaHilos;
 
-        // Mostrar configuración actual
-        const char* cantThreads = std::getenv("CANT_THREADS");
+        // 1. Mostrar límite configurado en el .env 
+        const char* maxTests = std::getenv("MAX_BENCHMARK_TESTS");
+        std::cout << "\n[INFO] Límite de pruebas simultáneas (.env): " 
+                  << (maxTests ? maxTests : "5 (default)") << std::endl;
 
-        std::cout << "\nConfiguración actual:" << std::endl;
-        std::cout << "\n  CANT_THREADS: " << (cantThreads ? cantThreads : "4 (default)") << std::endl;
-
+        // 2. Pedir Carpeta
         std::cout << "\nIngrese carpeta de libros: ";
-        
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Limpiar buffer
         std::getline(std::cin, carpetaLibros);
 
         if (carpetaLibros.empty()) {
@@ -497,20 +497,30 @@ void graficaParalela (){
             continue;
         }
 
-        std::cout << "Iniciando Benchmark..." << std::endl;
-        
-        const char* programa = std::getenv("BENCHMARK_RENDIMIENTO");
-        
-        if (!programa) {
-            std::cout << "Error: Variable de entorno BENCHMARK_RENDIMIENTO no definida en .env" << std::endl;
-            std::cout << "Defínela apuntando a: ../grafica_rendimiento_paralela/bin/benchmark" << std::endl;
+        // 3. Pedir Hilos 
+        std::cout << "Ingrese los hilos a probar separados por espacio (Ej: 1 2 4 8): ";
+        std::getline(std::cin, listaHilos);
+
+        if (listaHilos.empty()) {
+            std::cout << "Error: lista de hilos vacía" << std::endl;
             pausarPantalla();
-            return; // Salir si no hay configuración
+            continue;
         }
 
-        // Construimos el comando: ./bin/benchmark "ruta/a/libros"
-        std::string comando = std::string(programa) + " \"" + carpetaLibros + "\"";
+        std::cout << "\nIniciando Benchmark..." << std::endl;
         
+        const char* programa = std::getenv("BENCHMARK_RENDIMIENTO");
+        if (!programa) {
+            std::cout << "Error: BENCHMARK_RENDIMIENTO no definida en .env" << std::endl;
+            pausarPantalla();
+            return;
+        }
+
+        // ./benchmark "carpeta" "1 2 4 8"
+        std::string comando = std::string(programa) + " \"" + carpetaLibros + "\" \"" + listaHilos + "\"";
+        
+        std::cout << "Ejecutando: " << comando << std::endl;
+
         int resultado = system(comando.c_str());        
         if (resultado != 0) {
             std::cerr << "Error al ejecutar el programa de benchmark." << std::endl;

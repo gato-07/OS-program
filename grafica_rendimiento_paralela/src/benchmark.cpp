@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 // --- CONFIGURACIÓN ---
 const std::string ARCHIVO_SALIDA_TEMP = "temp_benchmark.idx";
 const std::string LOG_TIEMPOS = "benchmark_resultados.log"; 
+const int DEFAULT_MAX_TESTS = 5;
 
 std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\n\r");
@@ -20,18 +21,12 @@ std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Función para parsear formato python
-std::vector<int> parsearListaPython(std::string str) {
+std::vector<int> parsearHilosInput(std::string str) {
     std::vector<int> numeros;
-    for (char &c : str) {
-        if (c == '[' || c == ']' || c == '\'' || c == '\"' || c == ',') {
-            c = ' ';
-        }
-    }
     std::stringstream ss(str);
     int num;
     while (ss >> num) {
-        numeros.push_back(num);
+        if (num > 0) numeros.push_back(num);
     }
     return numeros;
 }
@@ -57,20 +52,12 @@ bool inicializarLog(const std::string& rutaArchivo) {
     if (rutaCompleta.has_parent_path()) {
         fs::path directorio = rutaCompleta.parent_path();
         if (!fs::exists(directorio)) {
-            try {
-                fs::create_directories(directorio);
-            } catch (const fs::filesystem_error& e) {
-                std::cerr << "[ERROR] No se pudo crear el directorio del log: " << e.what() << std::endl;
-                return false;
-            }
+            try { fs::create_directories(directorio); } 
+            catch (...) { return false; }
         }
     }
-
     std::ofstream archivo(rutaArchivo, std::ofstream::trunc);
-    if (!archivo.is_open()) {
-        std::cerr << "[ERROR] No se pudo crear el archivo de log: " << rutaArchivo << std::endl;
-        return false;
-    }
+    if (!archivo.is_open()) return false;
     archivo.close();
     return true;
 }
@@ -79,15 +66,18 @@ int main(int argc, char* argv[]) {
     std::cout << "==================================================" << std::endl;
     std::cout << "     INICIANDO BENCHMARK DE RENDIMIENTO" << std::endl;
     std::cout << "==================================================" << std::endl;
-    
-    if (argc < 2) {
-        std::cerr << "Uso: " << argv[0] << " <carpeta_libros>" << std::endl;
+
+    // --- 1. VALIDACIÓN DE ARGUMENTOS ---
+    if (argc < 3) {
+        std::cerr << "Uso: " << argv[0] << " <carpeta_libros> <lista_hilos>" << std::endl;
+        std::cerr << "Ejemplo: " << argv[0] << " ../data/libros \"1 2 4 8\"" << std::endl;
         return 1;
     }
     
     std::string carpeta_libros = argv[1];
+    std::string input_hilos = argv[2]; 
 
-    // Cargar .env
+    // --- 2. CARGAR CONFIGURACIÓN ---
     if (fs::exists(".env")) cargarEnv(".env");
     else if (fs::exists("../.env")) cargarEnv("../.env");
 
@@ -95,7 +85,7 @@ int main(int argc, char* argv[]) {
     std::string ruta_ejecutable = env_exe ? env_exe : ""; 
 
     if (ruta_ejecutable.empty() || !fs::exists(ruta_ejecutable)) {
-        std::cerr << "[ERROR FATAL] Ejecutable no encontrado (Revisa INDICE_INVERT_PARALELO): " << ruta_ejecutable << std::endl;
+        std::cerr << "[ERROR FATAL] Ejecutable no encontrado: " << ruta_ejecutable << std::endl;
         return 1;
     }
     if (!fs::exists(carpeta_libros)) {
@@ -103,25 +93,39 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Obtener CANT_THREADS del .env
-    std::vector<int> cant_threads;
-    const char* env_threads = std::getenv("CANT_TREADS"); 
-    if (!env_threads) env_threads = std::getenv("CANT_THREADS"); 
+    // --- 3. PROCESAR HILOS Y APLICAR LÍMITE ---
+    
+    const char* env_limit = std::getenv("MAX_BENCHMARK_TESTS");
+    int max_tests = env_limit ? std::atoi(env_limit) : DEFAULT_MAX_TESTS;
+    if (max_tests <= 0) max_tests = DEFAULT_MAX_TESTS;
 
-    if (env_threads) {
-        cant_threads = parsearListaPython(env_threads);
-    } else {
-        std::cout << "  [WARN] Usando default." << std::endl;
-        cant_threads = {2, 4, 8, 12, 16};
+    std::cout << "  [CONF] Límite de pruebas (.env): " << max_tests << std::endl;
+
+    std::vector<int> cant_threads = parsearHilosInput(input_hilos);
+
+    if (cant_threads.empty()) {
+        std::cerr << "[ERROR] No ingresaste números válidos de hilos." << std::endl;
+        return 1;
     }
 
-    //  Preparar archivo de Log
-    if (!inicializarLog(LOG_TIEMPOS)) return 1;
+    if (cant_threads.size() > (size_t)max_tests) {
+        std::cout << "  [WARN] Ingresaste " << cant_threads.size() << " configuraciones, pero el límite es " << max_tests << "." << std::endl;
+        std::cout << "  -> Recortando la lista a los primeros " << max_tests << "." << std::endl;
+        cant_threads.resize(max_tests);
+    }
 
+    std::cout << "  [INFO] Se ejecutarán pruebas con: ";
+    for (int t : cant_threads) std::cout << t << " ";
+    std::cout << "hilos." << std::endl;
+
+
+    // --- 4. PREPARAR LOG ---
+    if (!inicializarLog(LOG_TIEMPOS)) return 1;
     std::string log_absoluto = fs::absolute(LOG_TIEMPOS).string();
     setenv("BENCHMARK_OUTPUT", log_absoluto.c_str(), 1);
 
-    // Ejecutar Pruebas
+
+    // --- 5. EJECUTAR PRUEBAS ---
     for (int n_hilos : cant_threads) {
         std::cout << "\n>>> Probando con " << n_hilos << " threads... ";
         std::cout.flush();
@@ -143,6 +147,8 @@ int main(int argc, char* argv[]) {
     unsetenv("BENCHMARK_OUTPUT");
     unsetenv("N_THREADS");
 
+
+    // --- 6. GRAFICAR ---
     std::cout << "\n\n==================================================" << std::endl;
     std::cout << "     GENERANDO GRÁFICO" << std::endl;
     std::cout << "==================================================" << std::endl;
@@ -158,7 +164,9 @@ int main(int argc, char* argv[]) {
     std::string comandoPy = "python3 " + script_py_final + " " + LOG_TIEMPOS;
     int retPy = system(comandoPy.c_str());
 
-    if (retPy != 0) {
+    if (retPy == 0) {
+        std::cout << "\n[EXITO] Gráfico guardado: grafico_rendimiento.png" << std::endl;
+    } else {
         std::cerr << "\n[ERROR] Falló Python." << std::endl;
     }
 

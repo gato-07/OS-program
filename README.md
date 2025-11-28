@@ -35,6 +35,18 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
     GAME_DIE_SIDES_R: Tamaño del dado que se usa para atacar, el numero que sale es el valor de tu ataque.
     PLAYER_MAX_HP: Vida maxima de cada jugador.
 
+## Grafico rendimiento
+  Programa que incluye un módulo de benchmarking automatizado diseñado para evaluar la eficiencia del algoritmo de índice invertido paralelo.
+
+  ### Requisitos
+    * Python 3 instalado en el sistema.
+    * Librería `matplotlib` para la generación de gráficos.
+
+  ### Parametros
+    Los parametros esenciales se pueden manejar desde el .env
+
+    CANT_THREADS=["1", "2", "3", "4", "8", "12"] (Para definir la cantidad de hilos a evaluar)
+
 # Compilación y ejecución menu principal
   Cada carpeta de app cuenta con su makefile, los cuales son requeridos para el funcionamiento del menu principal. Desde cada carpeta en terminal: 
   
@@ -56,6 +68,11 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   Compilar Índice Invertido Paralelo
   
     cd OS-program/crea_indice_paralelo
+    make
+
+  Compilar Grafica de rendimiento
+  
+    cd OS-program/grafica_rendimiento_paralela
     make
 
   Ir al menu principal

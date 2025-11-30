@@ -22,9 +22,10 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
 ## Juego
   ### Requerimientos
     pip install dotenv
+    sudo apt-get install konsole (valido tambien instalar xterm, este paso es por si no hay un paquete que maneje consolas externas)
   ### Ejecucion
-    La opcion 9 deja escoger entre HOST y CLIENTE (jugador), basta con escogerla.
-    El cliente pide ingresar nombre y nombre del equipo, asegurarse de poner el mismo nombre exacto de equipo para hacer teams.
+    La opcion 9 (juego) deja escoger entre HOST y CLIENTE (jugador).
+    El cliente pide ingresar nombre y nombre del equipo, asegurarse de poner el mismo nombre exacto de equipo para hacer teams (2 TEAMS).
   ### Parametros
     Los parametros esenciales se pueden manejar desde el .env.
 
@@ -81,7 +82,7 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
       make
       ./bin/menu_principal -u usuario -p password [-f archivo]
 
-# Configuración 
+# Configuración Indice Invertido Paralelo
   El módulo crea_indice_paralelo se puede configurar usando las siguientes variables de entorno. Si no se definen, se usarán valores por defecto.
 
   N_THREADS: Especifica el número de hilos de procesamiento.

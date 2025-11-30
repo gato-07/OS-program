@@ -1,7 +1,9 @@
 import asyncio
 import config  # Importa la configuración de .env
 from game_logic import GameState, Player  # Importa las CLASES del cerebro
-
+import csv
+import datetime
+import os
 # El estado global del juego. Solo hay UNA instancia.
 GAME = GameState()
 
@@ -188,13 +190,17 @@ async def handle_client(reader, writer):
                     await writer.drain()
 
                 elif status == "Accion":
-                    # si es válida, se tira mensaje por broadcast
-                    await broadcast(f"ACCION: {message}")
-                    await broadcast(
-                        GAME.get_status_summary()
-                    )  # Enviar estado actualizado
+                    # La acción fue válida.
+                    # 1. Enviar el resultado detallado SOLO al jugador que actuó.
+                    await send_to_player(writer, f"RESULTADO: {message}")
+
+                    # 2. Enviar un resumen de la acción a TODOS.
                     # (process_action ya llamó a next_turn(), así que anunciamos el siguiente)
-                    await broadcast_turn_info()
+                    await broadcast(GAME.get_status_summary())
+                    await broadcast(
+                        f"INFO: {new_player.name} ha realizado una acción."
+                    )
+                    await broadcast_turn_info() # Anunciar el siguiente turno
 
                 elif status == "Ganador":
                     # termino del juego
@@ -206,6 +212,8 @@ async def handle_client(reader, writer):
                     await broadcast(GAME.get_status_summary())
 
                     GAME.game_started = False  # Detener el juego
+                    #guardar en csv
+                    save_stats_to_csv(GAME)
                     # aca se pueden agregar lógicas de reinicio si se desea
                     break  # Rompe el bucle while True para este cliente
 
@@ -269,6 +277,44 @@ async def main():
 
     async with server:
         await server.serve_forever()
+        
+# PARA EL LOG
+def save_stats_to_csv(game_state):
+    # Generar un ID único para esta partida basado en la hora de inicio
+    match_id = game_state.start_time.strftime('%Y%m%d-%H%M%S')
+
+    # Definir el directorio y crear un nombre de archivo único para la partida
+    log_dir = "gamelogs"
+    filename = os.path.join(log_dir, f"match_{match_id}.csv")
+
+    # Asegurarse de que el directorio exista, si no, lo crea
+    os.makedirs(log_dir, exist_ok=True)
+
+    with open(filename, mode='a', newline='', encoding='utf-8') as csvfile:
+        fieldnames = [
+            'timestamp', 'match_id', 'player_name', 'team_name', 'is_winner',
+            'damage_dealt', 'attacks_made', 'defenses_made'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader() # Escribir cabecera siempre, ya que es un archivo nuevo
+
+        winner_team_name = game_state.check_win_condition().name if game_state.check_win_condition() else "N/A"
+
+        for team in game_state.teams.values():
+            for player in team.players:
+                writer.writerow({
+                    'timestamp': datetime.datetime.now().isoformat(),
+                    'match_id': match_id,
+                    'player_name': player.name,
+                    'team_name': player.team.name,
+                    'is_winner': 'Yes' if player.team.name == winner_team_name else 'No',
+                    'damage_dealt': player.stats_damage_dealt,
+                    'attacks_made': player.stats_attacks_made,
+                    'defenses_made': player.stats_defenses_made,
+                })
+    print(f"[STATS] Estadísticas de la partida {match_id} guardadas en {filename}")
+
 
 
 if __name__ == "__main__":

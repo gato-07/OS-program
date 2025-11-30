@@ -1,5 +1,6 @@
 import random
 import config
+import datetime
 
 # definiendo estado de jugadores
 
@@ -14,6 +15,9 @@ class Player:
         self.hp = config.PLAYER_MAX_HP
         self.is_defeated = False
         self.is_defending = False
+        self.stats_damage_dealt = 0
+        self.stats_attacks_made = 0
+        self.stats_defenses_made = 0
 
     def take_damage(self, amount):
         """Resta HP al jugador y comprueba si es derrotado."""
@@ -34,7 +38,7 @@ class Player:
             defeat_msg = f"¡{self.name} ha sido derrotado!"
 
         damage_msg = f"HP restante de {self.name}: {self.hp}"
-        return damage_msg + defense_msg, defeat_msg
+        return damage_msg + defense_msg, defeat_msg, final_damage
 
 
 # definiendo estado de equipos
@@ -229,9 +233,10 @@ class GameState:
         if target.team == player.team:
             return "Error", "No puedes atacar a un compañero de equipo."
         # Ejecutar ataque
+        player.stats_attacks_made += 1
         roll = random.randint(1, config.DIE_SIDES_R)  # El dado decide el daño
-        damage_msg, defeat_msg = target.take_damage(roll)
-
+        damage_msg, defeat_msg, final_damage = target.take_damage(roll)
+        player.stats_damage_dealt += final_damage
         full_msg = (
             f"¡{player.name} ataca a {target.name} por {roll} de daño! {damage_msg}"
         )
@@ -266,4 +271,5 @@ class GameState:
         """Inicia el juego configurando los turnos."""
         if not self.game_started:
             self.game_started = True
+            self.start_time = datetime.datetime.now()
             self.setup_turns()

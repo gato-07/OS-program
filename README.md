@@ -20,20 +20,23 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   Programa que genera un indice invertido a partir de una carpeta con libros en formato .txt trabajando con multiples hilos de forma paralela.
 
 ## Juego
+  ### Descripcion
+    El juego se basa en combate por turnos, por cada comando (atacar <nombre enemigo> o defender <nombre enemigo>) se lanza un dado y golpea por el valor. El juego se acaba cuando se mueren todos los integrantes del equipo.
   ### Requerimientos
-    pip install dotenv
+    pip install -r requirements.txt
   ### Ejecucion
-    La opcion 9 deja escoger entre HOST y CLIENTE (jugador), basta con escogerla.
+    La opcion 9 deja escoger entre HOST y CLIENTE (jugador).
     El cliente pide ingresar nombre y nombre del equipo, asegurarse de poner el mismo nombre exacto de equipo para hacer teams.
   ### Parametros
     Los parametros esenciales se pueden manejar desde el .env.
 
     SERVER_HOST: Direccion IP, local o Ipv4 (por defecto local).
     SERVER_PORT: Puerto (por defecto 9999, recomendado usar algun valor cercano a este).
-    GAME_MIN_TEAMS: Minimo de equipos para empezar la partida.
     GAME_MAX_PLAYERS_PER_TEAM: Maximo de jugadores por equipo.
     GAME_DIE_SIDES_R: Tamaño del dado que se usa para atacar, el numero que sale es el valor de tu ataque.
     PLAYER_MAX_HP: Vida maxima de cada jugador.
+  ### Graficos
+    Los graficos ocupan los siguientes estadisticos desde un csv: timestamp,match_id,player_name,team_name,is_winner,damage_dealt,attacks_made,defenses_made. Los graficos que se generan para cada partida individual son: Acciones por partida, Daño total por jugador y Contribucion de daño por equipo (daño porcentual de toda la partida). 
 
 ## Grafico rendimiento
   Programa que incluye un módulo de benchmarking automatizado diseñado para evaluar la eficiencia del algoritmo de índice invertido paralelo.

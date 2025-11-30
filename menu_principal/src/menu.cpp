@@ -414,17 +414,14 @@ void juegoHOST() {
     int rc = system("start cmd /k "cd ../juego && python server.py"");
 #else
     // Bash/Linux/macOS: abre nueva terminal (gnome-terminal, xterm, konsole, etc.)
-    // Usa la que esté disponible en el sistema
+    // Intenta usar la terminal más robusta primero (xterm) y tiene fallbacks.
     int rc = system(
-        "if command -v gnome-terminal >/dev/null 2>&1; then "
-        "gnome-terminal -- bash -c 'cd ../juego && python3 server.py; exec bash'; "
-        "elif command -v xterm >/dev/null 2>&1; then "
-        "xterm -e 'cd ../juego && python3 server.py; bash'; "
-        "elif command -v konsole >/dev/null 2>&1; then "
-        "konsole --noclose -e bash -c 'cd ../juego && python3 server.py'; "
-        "else "
-        "echo 'No se encontró una terminal gráfica compatible. Ejecute manualmente: cd ../juego && python3 server.py'; "
-        "fi"
+        "cd ../juego && ( "
+        "xterm -e 'python3 server.py; echo \"Servidor cerrado. Presiona Enter para cerrar esta ventana.\"; read' || "
+        "gnome-terminal -- bash -c 'python3 server.py; echo \"Servidor cerrado. Presiona Enter para cerrar esta ventana.\"; exec bash' || "
+        "konsole --noclose -e bash -c 'python3 server.py; echo \"Servidor cerrado. Presiona Enter para cerrar esta ventana.\"; read' || "
+        " (echo \"Error: No se encontró una terminal gráfica compatible (xterm, gnome-terminal, konsole).\" && exit 1) "
+        ")"
     );
 #endif
     if (rc != 0) {
@@ -444,12 +441,22 @@ void juegoCLIENT() {
     pausarPantalla();
 }
 
+void juegoPLOTS() {
+    std::cout << "Lanzando script de graficación de juego..." << std::endl;
+    int rc = system("cd ../juego && python3 statPlot.py");
+    if (rc != 0) {
+        std::cerr << "Error al lanzar la graficación (código " << rc << ")" << std::endl;
+    }
+    pausarPantalla();
+}
+
 void juego() {
     while (true) {
         limpiarPantalla();
         std::cout << "=== JUEGO ===" << std::endl;
         std::cout << "1) Hostear partida (servidor)" << std::endl;
         std::cout << "2) Unirse como cliente" << std::endl;
+        std::cout << "3) Graficar partida por ID" << std::endl;
         std::cout << "0) Volver al menú principal" << std::endl;
         std::cout << "Seleccione una opción: ";
         int op = 0;
@@ -460,6 +467,9 @@ void juego() {
                 break;
             case 2:
                 juegoCLIENT();
+                break;
+            case 3:
+                juegoPLOTS();
                 break;
             case 0:
                 return;

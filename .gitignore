@@ -9,3 +9,6 @@ proyecto-entrega2.pdf
 menu/bin/
 menu/obj/
 libros/
+*.csv
+*.png
+data/usuarios.dat

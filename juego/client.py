@@ -1,242 +1,243 @@
 import asyncio
 import config  # el config.py
 import os
-import sys
+import collections
 
-# El estado inicial debe leer del módulo config para estar sincronizado
-game_state = {"players": {}, "last_message": "¡Conectado! Esperando jugadores..."}
+# --- Estado Global del Cliente ---
+# Usamos un diccionario para mantener todo el estado que necesitamos para dibujar la UI.
+# Esto incluye el estado del juego recibido del servidor y el input actual del usuario.
+CLIENT_STATE = {
+    "players": {},  # { "nombre": {"hp": 100, "team": "A", ...} }
+    "event_log": collections.deque(["Conectando..."], maxlen=3), # Guarda los últimos 3 eventos
+    "user_input": "",  # Lo que el usuario está escribiendo actualmente
+    "is_connected": False,
+    "game_over": False,
+}
 
 
-def parse_message(msg, call_draw=True):
+def parse_message(msg):
     """
-    Analiza los mensajes del servidor y actualiza nuestro game_state local.
-    call_draw: si False, no llama a draw_screen() (para procesar múltiples mensajes)
+    Analiza un mensaje del servidor y actualiza el CLIENT_STATE.
+    NO dibuja la pantalla, solo actualiza los datos.
     """
-    global game_state
+    global CLIENT_STATE
 
     if not msg.strip():
         return
 
-    # Solo guardar mensajes importantes en "last_message"
-    # No guardar líneas del estado del tablero
-    if (
-        not msg.strip().startswith(">")
-        and not msg.strip().startswith("---")
-        and not msg.strip().startswith("Equipo")
-    ):
-        game_state["last_message"] = msg
+    # Guardar casi todos los mensajes como el "último evento"
+    # Excluimos los prompts de turno para que no se queden fijos en la UI.
+    if "¡Es tu turno!" not in msg:
+        CLIENT_STATE["event_log"].append(msg)
 
-    # PARSEAR ESTADO DEL TABLERO (líneas que empiezan con ">")
-    # Formato: "  > NombreJugador     [HP: XX/100]" o "  > NombreJugador     [DERROTADO]"
+    # --- Lógica de Parseo Mejorada ---
+
+    # Detectar fin del juego para detener el input
+    if "¡JUEGO TERMINADO!" in msg:
+        CLIENT_STATE["game_over"] = True
+
+    # Parsear línea de estado de un jugador
     if msg.strip().startswith(">"):
         try:
             parts = msg.strip().split()
-            if len(parts) < 2:
-                return
-
-            name = parts[1]  # El nombre del jugador
-
-            # IMPORTANTE: Si el jugador NO está en nuestro diccionario, crearlo
-            if name not in game_state["players"]:
-                # Intentar obtener el equipo del contexto
-                current_team = game_state.get("_current_team", "Desconocido")
-                game_state["players"][name] = {
+            name = parts[1]
+            
+            if name not in CLIENT_STATE["players"]:
+                CLIENT_STATE["players"][name] = {
                     "hp": config.PLAYER_MAX_HP,
-                    "team": current_team,
+                    "team": CLIENT_STATE.get("_current_team", "???"),
                     "is_defending": False,
                 }
-            else:
-                # Si el jugador ya existe, actualizar su equipo si tenemos uno en contexto
-                current_team = game_state.get("_current_team")
-                if current_team:
-                    game_state["players"][name]["team"] = current_team
 
-            # Actualizar HP
-            if "[DERROTADO]" in msg:
-                game_state["players"][name]["hp"] = 0
-            else:
-                # Buscar la parte "HP:XX]" o "HP:XX/100]"
-                for part in parts:
+            player_data = CLIENT_STATE["players"][name]
+            player_data["team"] = CLIENT_STATE.get("_current_team", player_data["team"])
+
+            # Cada vez que recibimos una actualización de estado de un jugador,
+            # asumimos que ya no se está defendiendo del turno anterior.
+            player_data["is_defending"] = False
+
+            # Buscar información de HP si está presente
+            try:
+                # Buscar el índice de la parte que contiene "HP:"
+                hp_index = -1
+                for i, part in enumerate(parts):
                     if "HP:" in part:
-                        # Extraer el número, puede ser "HP:85]" o "HP:85/100]"
-                        hp_str = (
-                            part.replace("HP:", "").replace("[", "").replace("]", "")
-                        )
-                        if "/" in hp_str:
-                            hp_str = hp_str.split("/")[0]
-                        try:
-                            hp = int(hp_str)
-                            game_state["players"][name]["hp"] = hp
-                        except ValueError:
-                            pass
+                        hp_index = i
                         break
-
-            # Actualizar Estado de Defensa
-            game_state["players"][name]["is_defending"] = "[DEFENDIENDO]" in msg
-
-        except (IndexError, ValueError, TypeError):
-            pass  # Error de parseo
-
-    # PARSEAR MENSAJES "se unió al" (para equipos)
+                
+                if hp_index != -1:
+                    # El número puede estar en la misma parte ("HP:85") o en la siguiente ("[HP:", "85/100]")
+                    full_hp_str = "".join(parts[hp_index:]) # Unimos todo desde "HP:" hasta el final
+                    hp_value_str = full_hp_str.split('/')[0].replace("HP:", "").strip("[]")
+                    player_data["hp"] = int(hp_value_str)
+            except (ValueError, IndexError):
+                pass # Si el parseo falla, no rompemos el cliente
+            
+            # El estado de derrota y defensa se extrae del mensaje actual
+            player_data["hp"] = 0 if "[DERROTADO]" in msg else player_data["hp"]
+            player_data["is_defending"] = "[DEFENDIENDO]" in msg and player_data["hp"] > 0
+        except (IndexError, ValueError):
+            pass
+    
     elif "Jugador" in msg and "se unió al" in msg:
         try:
-            # Formato: "INFO: Jugador NombreJugador se unió al NombreEquipo."
             parts = msg.split()
-            name_index = parts.index("Jugador") + 1
-            team_index = parts.index("al") + 1
-
-            name = parts[name_index]
-            team = parts[team_index].strip(".")
-
-            # Añadir o actualizar jugador
-            if name not in game_state["players"]:
-                game_state["players"][name] = {
+            name = parts[parts.index("Jugador") + 1]
+            team = parts[parts.index("al") + 1].strip(".")
+            
+            if name not in CLIENT_STATE["players"]:
+                CLIENT_STATE["players"][name] = {
                     "hp": config.PLAYER_MAX_HP,
                     "team": team,
                     "is_defending": False,
                 }
             else:
-                # Si ya existía (fue creado por el parser del tablero), actualizar el equipo
-                game_state["players"][name]["team"] = team
-
+                CLIENT_STATE["players"][name]["team"] = team
         except (IndexError, ValueError):
-            pass  # Error de parseo
-
-    # PARSEAR LÍNEA "Equipo X:" del estado del tablero
+            pass
+    
     elif msg.strip().startswith("Equipo "):
-        # Esta línea contiene información del equipo, extraer y actualizar
         try:
-            # Formato: "Equipo NombreEquipo:"
             team_name = msg.strip().replace("Equipo ", "").replace(":", "").strip()
-            # Guardar el equipo actual que estamos procesando para las siguientes líneas ">"
-            game_state["_current_team"] = team_name
+            CLIENT_STATE["_current_team"] = team_name
         except:
             pass
-
-    # LÓGICA DE TURNO
-    elif "TURNO: Es el turno de" in msg:
-        # Resetear el estado de defensa de todos (la defensa solo dura un turno)
-        for player_data in game_state["players"].values():
-            player_data["is_defending"] = False
-
-    # PARSEAR LÍNEA "--- Estado del Tablero ---"
-    elif "--- Estado del Tablero ---" in msg:
-        # No hacer nada, solo ignorar esta línea de encabezado
-        pass
-
-    # Refrescar la pantalla con la nueva información solo si se solicita
-    if call_draw and msg.strip() and not msg.strip().startswith("---"):
-        draw_screen()
 
 
 def draw_screen():
     """
-    Esta función borra la consola y dibuja el juego completo.
+    Borra la consola y dibuja la UI completa basada en el CLIENT_STATE actual.
+    Esta es la única función que debe imprimir en la consola.
     """
     os.system("cls" if os.name == "nt" else "clear")
-
     print("--- ARENA DE COMBATE POR EQUIPOS ---")
 
-    # Dibujar el estado de los jugadores (HP)
-    print("\nEstado de Jugadores:")
-    for name, data in game_state["players"].items():
-        # Determinar el estado de HP
-        status_hp = f"HP: {data['hp']}"
-        if data["hp"] <= 0:
-            status_hp = "DERROTADO"
+    # Agrupar jugadores por equipo para una mejor visualización
+    teams = {}
+    for name, data in CLIENT_STATE["players"].items():
+        team_name = data.get("team", "Desconocido")
+        if team_name not in teams:
+            teams[team_name] = []
+        teams[team_name].append((name, data))
 
-        # Determinar estado de defensa (usamos .get() por si la clave aún no existe)
-        status_def = ""
-        if data.get("is_defending", False):
-            status_def = " [DEFENDIENDO]"  # Añade el texto extra
+    for team_name, players in sorted(teams.items()):
+        print(f"\nEquipo {team_name}:")
+        for name, data in players:
+            status_hp = "DERROTADO" if data['hp'] <= 0 else f"HP: {data['hp']}"
+            status_def = " [DEFENDIENDO]" if data.get("is_defending", False) else ""
+            print(f"  > {name.ljust(15)} [{status_hp}]{status_def}")
 
-        # Imprimir la línea completa
-        print(f"  > {name} ({data['team']}) [{status_hp}]{status_def}")
+    print("\n" + "="*40)
+    print("ÚLTIMOS EVENTOS:")
+    for event in CLIENT_STATE["event_log"]:
+        print(f"- {event}")
+    print("="*40 + "\n")
 
-    # Mostrar el último mensaje del servidor
-    print("\nÚltimo Evento:")
-    print(f"  {game_state['last_message']}")
+    # Mostrar el prompt de input con el texto que el usuario ya ha escrito
+    if CLIENT_STATE["game_over"]:
+        print("\nJUEGO TERMINADO. Presiona Enter para salir.")
+    elif not CLIENT_STATE["is_connected"]:
+        print("\nConectando al servidor...")
+    else:
+        print(f"COMANDO > {CLIENT_STATE['user_input']}", end="", flush=True)
 
-    # Mostrar el prompt de input
-    print("\n> ", end="", flush=True)
 
-
-async def tcp_echo_client():
+async def main_client():
     try:
         reader, writer = await asyncio.open_connection(config.HOST, config.PORT)
+        CLIENT_STATE["is_connected"] = True
     except ConnectionRefusedError:
-        print(f"Error: No se pudo conectar al servidor en {config.HOST}:{config.PORT}.")
-        print("Asegúrate de que 'server.py' esté ejecutándose.")
+        CLIENT_STATE["event_log"].append(f"Error: No se pudo conectar a {config.HOST}:{config.PORT}. ¿El servidor está activo?")
+        draw_screen()
         return
 
-    # Dibujar pantalla inicial
-    draw_screen()
-
     loop = asyncio.get_event_loop()
+    input_queue = asyncio.Queue()
 
-    # Tarea para recibir mensajes del servidor
-    async def loop_escucha(reader):
+    def on_input():
+        """Función que se ejecuta en un hilo para no bloquear asyncio."""
+        while CLIENT_STATE["is_connected"] and not CLIENT_STATE["game_over"]:
+            try:
+                # Lee un solo caracter (esto es dependiente del SO)
+                # Esta es una simplificación. Una librería como `blessed` o `prompt_toolkit` lo haría mejor.
+                char = sys.stdin.read(1)
+                asyncio.run_coroutine_threadsafe(input_queue.put(char), loop)
+            except:
+                break
+
+    # Tarea 1: Escuchar mensajes del servidor
+    async def listen_to_server(reader):
         try:
             while True:
                 data = await reader.read(4096)
                 if not data:
-                    print("\nDesconectado del servidor.")
+                    CLIENT_STATE["event_log"].append("Desconectado del servidor.")
+                    CLIENT_STATE["is_connected"] = False
                     break
-
-                # Manejar múltiples mensajes a la vez
-                # El servidor puede enviar "msg1\nmsg2" en un solo paquete
                 messages = data.decode().strip().split("\n")
-                # Procesar todos los mensajes sin refrescar la pantalla
-                for i, msg in enumerate(messages):
-                    # Solo llamar draw_screen en el último mensaje
-                    is_last = i == len(messages) - 1
-                    parse_message(msg.strip(), call_draw=is_last)
-
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            print(f"\nError en loop_escucha: {e}")
+                for msg in messages:
+                    parse_message(msg.strip())
+        except (asyncio.CancelledError, ConnectionResetError):
+            CLIENT_STATE["is_connected"] = False
         finally:
-            print("Cerrando conexión.")
-            writer.close()
-
-    # Tarea para leer el input del usuario y enviarlo
-    async def loop_envio(writer):
+            CLIENT_STATE["is_connected"] = False
+    
+    # Tarea 2: Bucle principal de UI y manejo de input
+    async def handle_ui_and_input(writer):
         try:
-            while True:
-                message = await loop.run_in_executor(None, input)
-
-                if not writer.is_closing():
-                    writer.write(message.encode())
-                    await writer.drain()
-                else:
-                    break
-
-                if message.lower() == "salir":
-                    break
+            while CLIENT_STATE["is_connected"]:
+                draw_screen()
+                try:
+                    # Esperar por un caracter del usuario o un timeout para redibujar
+                    char = await asyncio.wait_for(input_queue.get(), timeout=0.1)
+                    
+                    if char == '\n': # Enter
+                        command = CLIENT_STATE["user_input"]
+                        CLIENT_STATE["user_input"] = ""
+                        if command:
+                            writer.write(f"{command}\n".encode())
+                            await writer.drain()
+                        if command.lower() == "salir" or CLIENT_STATE["game_over"]:
+                            break
+                    elif char in ('\x7f', '\b'): # Backspace
+                        CLIENT_STATE["user_input"] = CLIENT_STATE["user_input"][:-1]
+                    else: # Cualquier otro caracter
+                        CLIENT_STATE["user_input"] += char
+                except asyncio.TimeoutError:
+                    continue # El timeout nos permite redibujar la pantalla
         except asyncio.CancelledError:
             pass
-        except Exception as e:
-            print(f"\nError en loop_envio: {e}")
         finally:
-            if not writer.is_closing():
-                writer.close()
+            CLIENT_STATE["is_connected"] = False
 
-    # Ejecutar ambas tareas concurrentemente
-    listen_task = asyncio.create_task(loop_escucha(reader))
-    send_task = asyncio.create_task(loop_envio(writer))
+    # --- Configuración y ejecución ---
+    # Preparar la terminal para leer caracter por caracter
+    import sys, tty, termios
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(sys.stdin.fileno())
+        # Iniciar el hilo para la entrada de usuario
+        input_thread = loop.run_in_executor(None, on_input)
 
-    await asyncio.wait([listen_task, send_task], return_when=asyncio.FIRST_COMPLETED)
+        # Crear y ejecutar las tareas de asyncio
+        listen_task = asyncio.create_task(listen_to_server(reader))
+        ui_task = asyncio.create_task(handle_ui_and_input(writer))
+        
+        await asyncio.wait([listen_task, ui_task], return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        # Restaurar la configuración de la terminal es MUY importante
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        if not writer.is_closing():
+            writer.close()
+            await writer.wait_closed()
+        os.system("clear")
+        print("Saliste del juego.")
 
-    listen_task.cancel()
-    send_task.cancel()
-
-    if not writer.is_closing():
-        writer.close()
-        await writer.wait_closed()
-
-    print("Saliendo del juego.")
 
 
 if __name__ == "__main__":
-    asyncio.run(tcp_echo_client())
+    try:
+        asyncio.run(main_client())
+    except KeyboardInterrupt:
+        print("\nJuego interrumpido.")

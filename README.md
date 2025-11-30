@@ -21,7 +21,10 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
 
 ## Juego
   ### Descripcion
-    El juego se basa en combate por turnos, por cada comando (atacar <nombre enemigo> o defender <nombre enemigo>) se lanza un dado y golpea por el valor. El juego se acaba cuando se mueren todos los integrantes del equipo.
+    El juego se basa en combate por turnos, por cada
+    comando (atacar <nombre enemigo> o defender <nombre enemigo>) 
+    se lanza un dado y golpea por el valor. El juego se acaba cuando
+    se mueren todos los integrantes del equipo.
   ### Requerimientos
     pip install dotenv
     sudo apt-get install konsole (valido tambien instalar xterm, este paso es por si no hay un paquete que maneje consolas externas)

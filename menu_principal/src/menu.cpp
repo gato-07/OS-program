@@ -23,6 +23,7 @@ void juegoHOST();
 void juegoCLIENT();
 void juego();
 void graficaParalela();
+void buscadorLibros();
 void salir();
 std::filesystem::path getRutaEjecutable(const std::string& var);
 
@@ -51,6 +52,7 @@ OpcionMenu opcionesMenu[] = {
     {8, "Crear indice invertido paralelo", indiceInvertidoParalelo},
     {9, "juego", juego},
     {10, "Graficar rendimiento ind. inv. paralelo", graficaParalela},
+    {11, "Buscador de libros (Cache + Motor)", buscadorLibros},
     {0, "Salir", salir}
 };
 
@@ -541,6 +543,154 @@ void graficaParalela (){
 }
     
 
+
+void buscadorLibros() {
+    while (true) {
+        limpiarPantalla();
+        std::cout << "PID del proceso: " << getpid() << std::endl;
+        std::cout << "\n=== BUSCADOR DE LIBROS (CACHE + MOTOR) ===" << std::endl;
+        std::cout << "Sistema de búsqueda con caché FIFO\n" << std::endl;
+        std::cout << "1) Iniciar Cache (Puerto 8001)" << std::endl;
+        std::cout << "2) Iniciar Motor (Puerto 8002)" << std::endl;
+        std::cout << "3) Ejecutar Buscador (Cliente)" << std::endl;
+        std::cout << "4) Iniciar todo el sistema (Cache + Motor + Buscador)" << std::endl;
+        std::cout << "0) Volver al menú principal" << std::endl;
+        std::cout << "\nSeleccione una opción: ";
+        
+        int opcion;
+        if (!(std::cin >> opcion)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Opción inválida" << std::endl;
+            pausarPantalla();
+            continue;
+        }
+        
+        switch (opcion) {
+            case 1: {
+                // Iniciar Cache
+                std::cout << "\nIniciando servidor de Cache en nueva ventana..." << std::endl;
+                const char* cacheExec = std::getenv("CACHE_SERVIDOR");
+                if (!cacheExec) {
+                    std::cerr << "ERROR: Variable CACHE_SERVIDOR no definida en .env" << std::endl;
+                    pausarPantalla();
+                    break;
+                }
+                
+                std::string comando = "xterm -e 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; read' || "
+                                     "gnome-terminal -- bash -c 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; exec bash' || "
+                                     "konsole --noclose -e bash -c 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; read' &";
+                
+                int rc = system(comando.c_str());
+                if (rc == 0) {
+                    std::cout << "✓ Servidor de Cache lanzado en nueva ventana (Puerto 8001)" << std::endl;
+                } else {
+                    std::cerr << "✗ Error al lanzar el servidor de Cache" << std::endl;
+                }
+                pausarPantalla();
+                break;
+            }
+            
+            case 2: {
+                // Iniciar Motor
+                std::cout << "\nIniciando servidor Motor en nueva ventana..." << std::endl;
+                const char* motorExec = std::getenv("MOTOR_SERVIDOR");
+                const char* indiceFile = std::getenv("INDICE_FILE");
+                
+                if (!motorExec || !indiceFile) {
+                    std::cerr << "ERROR: Variables no definidas en .env (MOTOR_SERVIDOR, INDICE_FILE)" << std::endl;
+                    pausarPantalla();
+                    break;
+                }
+                
+                std::string comando = "xterm -e 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; read' || "
+                                     "gnome-terminal -- bash -c 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; exec bash' || "
+                                     "konsole --noclose -e bash -c 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; read' &";
+                
+                int rc = system(comando.c_str());
+                if (rc == 0) {
+                    std::cout << "✓ Servidor Motor lanzado en nueva ventana (Puerto 8002)" << std::endl;
+                } else {
+                    std::cerr << "✗ Error al lanzar el servidor Motor" << std::endl;
+                }
+                pausarPantalla();
+                break;
+            }
+            
+            case 3: {
+                // Ejecutar Buscador
+                std::cout << "\nEjecutando Buscador (Cliente)..." << std::endl;
+                std::cout << "Nota: Asegúrate de que Cache y Motor estén ejecutándose\n" << std::endl;
+                
+                const char* buscadorExec = std::getenv("BUSCADOR_CLIENTE");
+                if (!buscadorExec) {
+                    std::cerr << "ERROR: Variable BUSCADOR_CLIENTE no definida en .env" << std::endl;
+                    pausarPantalla();
+                    break;
+                }
+                
+                std::string comando = "cd ../buscador && " + std::string(buscadorExec);
+                int rc = system(comando.c_str());
+                
+                if (rc != 0) {
+                    std::cerr << "\n✗ Error al ejecutar el buscador (código: " << rc << ")" << std::endl;
+                }
+                pausarPantalla();
+                break;
+            }
+            
+            case 4: {
+                // Iniciar todo el sistema
+                std::cout << "\nIniciando sistema completo (Cache + Motor + Buscador)..." << std::endl;
+                std::cout << "Se abrirán 2 ventanas nuevas para Cache y Motor\n" << std::endl;
+                
+                const char* cacheExec = std::getenv("CACHE_SERVIDOR");
+                const char* motorExec = std::getenv("MOTOR_SERVIDOR");
+                const char* buscadorExec = std::getenv("BUSCADOR_CLIENTE");
+                const char* indiceFile = std::getenv("INDICE_FILE");
+                
+                if (!cacheExec || !motorExec || !buscadorExec || !indiceFile) {
+                    std::cerr << "ERROR: Variables de entorno no definidas en .env" << std::endl;
+                    pausarPantalla();
+                    break;
+                }
+                
+                // Lanzar Cache
+                std::string cmdCache = "xterm -e 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; read' || "
+                                      "gnome-terminal -- bash -c 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; exec bash' || "
+                                      "konsole --noclose -e bash -c 'cd ../cache && " + std::string(cacheExec) + " 100; echo \"Cache cerrado. Presiona Enter.\"; read' &";
+                system(cmdCache.c_str());
+                std::cout << "  [1/3] Cache iniciado (Puerto 8001)" << std::endl;
+                std::cout << "  Esperando 2 segundos..." << std::endl;
+                sleep(2);
+                
+                // Lanzar Motor
+                std::string cmdMotor = "xterm -e 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; read' || "
+                                      "gnome-terminal -- bash -c 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; exec bash' || "
+                                      "konsole --noclose -e bash -c 'cd ../motor && " + std::string(motorExec) + " " + std::string(indiceFile) + "; echo \"Motor cerrado. Presiona Enter.\"; read' &";
+                system(cmdMotor.c_str());
+                std::cout << "  [2/3] Motor iniciado (Puerto 8002)" << std::endl;
+                std::cout << "  Esperando a que el motor cargue el índice (5 segundos)..." << std::endl;
+                sleep(5);
+                
+                // Ejecutar Buscador
+                std::cout << "  [3/3] Iniciando Buscador..." << std::endl;
+                std::string cmdBuscador = "cd ../buscador && " + std::string(buscadorExec);
+                system(cmdBuscador.c_str());
+                
+                pausarPantalla();
+                break;
+            }
+            
+            case 0:
+                return;
+                
+            default:
+                std::cout << "Opción no válida" << std::endl;
+                pausarPantalla();
+        }
+    }
+}
 
 std::filesystem::path getRutaEjecutable(const std::string& var) {
     const char* ruta = std::getenv(var.c_str());

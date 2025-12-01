@@ -1,7 +1,7 @@
 # Makefile principal para compilar todos los subproyectos.
 
 # Lista de directorios que contienen otros Makefiles.
-SUBDIRS = gestor_usuarios multiplicador_matrices crea_indice crea_indice_paralelo grafica_rendimiento_paralela menu_principal
+SUBDIRS = gestor_usuarios multiplicador_matrices crea_indice crea_indice_paralelo grafica_rendimiento_paralela cache motor buscador menu_principal
 
 # El objetivo por defecto 'all' compilará todo.
 all: $(SUBDIRS)

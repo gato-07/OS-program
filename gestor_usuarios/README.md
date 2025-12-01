@@ -1,24 +1,89 @@
-# Sistema Operativo
+# Gestor de Usuarios
 
-## Checklist de progreso
-### :arrows_counterclockwise: : En progreso, :x: : No terminado, :white_check_mark: : Terminado.
-- :white_check_mark: Menu.
-  - ta bien la estructura de archivos y el menu funciona.
-- ✅: Funciones faltantes
-  - Implementadas funciones de Salir y Listar Usuarios.
+Sistema de administracion de usuarios con almacenamiento persistente en archivo binario.
 
-# Acerca del programa
+## Descripcion
 
-### Requerimientos:
+Permite registrar, ver y eliminar usuarios del sistema operativo con persistencia en archivo usuarios.dat.
 
-- Compilador de C++
+## Compilacion
 
-### Instrucciones:
+```bash
+cd gestor_usuarios
+make
+```
 
-- Compilar gestor.cpp y main.cpp en C++
-- en bash: "make rebuild"
-- Ejecutar:
-- en bash: "./bin/gestor"
+## Uso
 
-### Notas:
-- Si no se encuentra un archivo usuarios.dat el programa crea uno vacío automáticamente. Del mismo modo se puede importar uno existente siguiendo el formato del programa
+```bash
+./bin/gestor_usuarios
+```
+
+No requiere parametros, se ejecuta de forma interactiva.
+
+Ejemplo:
+```bash
+./bin/gestor_usuarios
+```
+
+## Funcionalidades
+
+Menu interactivo con opciones:
+
+1. **Registrar Usuario**
+   - Solicita nombre de usuario y password
+   - Valida que el usuario no exista
+   - Guarda en archivo binario
+
+2. **Ver Usuarios**
+   - Lista todos los usuarios registrados
+   - Muestra nombre de usuario (no password)
+
+3. **Eliminar Usuario**
+   - Solicita nombre de usuario
+   - Elimina del archivo si existe
+
+4. **Salir**
+   - Cierra el programa
+
+## Persistencia
+
+Los datos se almacenan en:
+```
+../data/usuarios.dat
+```
+
+Si el archivo no existe, se crea automaticamente vacio.
+
+## Formato de Almacenamiento
+
+El archivo usuarios.dat es binario y contiene registros de:
+- Username (string)
+- Password (string, cifrado/hash)
+- Metadata adicional
+
+## Seguridad
+
+- Passwords almacenados de forma segura
+- Validacion de duplicados
+- Manejo de errores en operaciones de archivo
+
+## Estructura
+
+```
+gestor_usuarios/
+├── include/
+│   ├── usuario.h
+│   ├── archivo.h
+│   ├── utils.h
+│   └── menu.h
+├── src/
+│   ├── main.cpp
+│   ├── usuario.cpp
+│   ├── archivo.cpp
+│   ├── utils.cpp
+│   └── menu.cpp
+├── obj/
+├── bin/
+└── makefile
+```

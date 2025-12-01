@@ -54,6 +54,107 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
 
     CANT_THREADS=["1", "2", "3", "4", "8", "12"] (Para definir la cantidad de hilos a evaluar)
 
+## Buscador de Libros (Cache + Motor)
+  Sistema de búsqueda de libros implementado con arquitectura cliente-servidor usando sockets TCP. Consta de 3 componentes independientes:
+  
+  ### Componentes
+  
+  **1. Servidor Cache (Puerto 8001)**
+  - Implementa una caché FIFO con HashMap para O(1) lookup
+  - Almacena resultados de búsquedas recientes
+  - Estadísticas de hits/misses
+  - Política de evicción FIFO cuando está lleno
+  
+  **2. Servidor Motor (Puerto 8002)**
+  - Carga el índice invertido generado por `crea_indice_paralelo`
+  - Búsqueda en índice invertido con algoritmo TopK
+  - Ranking de documentos por score (frecuencia de términos)
+  
+  **3. Cliente Buscador**
+  - Interfaz de usuario para realizar búsquedas
+  - Orquesta la comunicación entre Cache y Motor
+  - Mide tiempos de respuesta (cache, memoria, total)
+  - Muestra resultados en formato JSON
+  
+  ### Flujo de Búsqueda
+  ```
+  Usuario ingresa query
+    ↓
+  [1] Buscador → Cache: ¿Está en caché?
+    ↓
+  SI: Cache → Buscador (HIT)
+  NO: [2] Buscador → Motor: Buscar en índice
+        ↓
+      Motor calcula TopK
+        ↓
+      Motor → Buscador: Resultados
+        ↓
+      [3] Buscador → Cache: Guardar resultados
+        ↓
+      Buscador muestra JSON con métricas
+  ```
+  
+  ### Formato de Respuesta JSON
+  ```json
+  {
+    "Mensaje": "danilo rojo",
+    "origen_respuesta": "cache",
+    "tiempo_cache": 2.45 ms,
+    "tiempo_M_total": 0 ms,
+    "tiempo_total": 3.12 ms,
+    "topK": 3,
+    "Respuesta": [
+      {"Libro": "El Sombrio Anido", "Score": 3},
+      {"Libro": "Militio", "Score": 2},
+      {"Libro": "Ojos Rojos", "Score": 1}
+    ]
+  }
+  ```
+  
+  ### Protocolo de Comunicación
+  
+  **Cache (8001):**
+  - `GET:<query>` → `HIT:<datos>` o `MISS`
+  - `PUT:<query>:<datos>` → `OK`
+  - `STATS` → `HITS:X|MISSES:Y|TASA:Z%`
+  - `CLEAR` → `OK`
+  
+  **Motor (8002):**
+  - `SEARCH:<query>:<topK>` → `OK:<datos>` o `OK:VACIO`
+  
+  Formato de datos: `libro1,score1;libro2,score2;...`
+  
+  ### Requisitos
+  - Índice invertido generado (ejecutar opción 8 del menú)
+  - Archivo `mapa_libros.txt` generado
+  - Terminal con soporte para xterm, gnome-terminal o konsole
+  
+  ### Parámetros (.env)
+  ```bash
+  CACHE_SERVIDOR=../cache/bin/cache_servidor
+  MOTOR_SERVIDOR=../motor/bin/motor_servidor
+  BUSCADOR_CLIENTE=../buscador/bin/buscador
+  INDICE_FILE=../crea_indice_paralelo/indice.idx
+  MAPA_LIBROS=../data/mapa_libros.txt
+  CACHE_SIZE=100
+  TOPK_DEFAULT=3
+  ```
+  
+  ### Manejo de Errores
+  - El Buscador verifica que Cache y Motor estén activos antes de aceptar búsquedas
+  - Timeouts de 5 segundos en conexiones
+  - Mensajes descriptivos indicando qué servicio falta y cómo iniciarlo
+  - Validación de respuestas en cada comunicación
+  
+  ### Uso desde el Menú
+  Opción 11: "Buscador de libros (Cache + Motor)"
+  
+  Submenú:
+  1. Iniciar Cache (Puerto 8001) - Abre nueva ventana
+  2. Iniciar Motor (Puerto 8002) - Abre nueva ventana
+  3. Ejecutar Buscador (Cliente) - En la terminal actual
+  4. Iniciar todo el sistema - Automatiza 1, 2 y 3
+
 # Compilación y ejecución menu principal
   Cada carpeta de app cuenta con su makefile, los cuales son requeridos para el funcionamiento del menu principal. Desde cada carpeta en terminal: 
   
@@ -80,6 +181,21 @@ El objetivo de este proyecto es desarrollar un Sistema Operativo (SO) que permit
   Compilar Grafica de rendimiento
   
     cd OS-program/grafica_rendimiento_paralela
+    make
+
+  Compilar Cache (Servidor de Caché FIFO)
+  
+    cd OS-program/cache
+    make
+
+  Compilar Motor (Servidor de Búsqueda)
+  
+    cd OS-program/motor
+    make
+
+  Compilar Buscador (Cliente)
+  
+    cd OS-program/buscador
     make
 
   Ir al menu principal
